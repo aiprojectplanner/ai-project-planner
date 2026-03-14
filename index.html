@@ -1,27 +1,203 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Project Planner</title>
   <style>
-    body {
-      font-family: Arial;
-      text-align: center;
-      margin-top: 100px;
-      background:#f5f5f5;
+    * {
+      box-sizing: border-box;
     }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      color: #1f2937;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 60px auto;
+      padding: 24px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+
     h1 {
-      font-size:48px;
+      margin: 0 0 12px;
+      font-size: 36px;
+    }
+
+    .subtitle {
+      margin: 0 0 24px;
+      color: #6b7280;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      min-width: 260px;
+      padding: 14px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: #2563eb;
+    }
+
+    button {
+      padding: 14px 20px;
+      border: none;
+      border-radius: 12px;
+      background: #2563eb;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    .result {
+      margin-top: 24px;
+      display: none;
+    }
+
+    .plan-header {
+      font-size: 22px;
+      margin-bottom: 18px;
+    }
+
+    .phase {
+      margin-bottom: 18px;
+      padding: 18px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: #fafafa;
+    }
+
+    .phase h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .phase ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #374151;
+    }
+
+    .phase li {
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      background: #e0e7ff;
+      color: #3730a3;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .footer-note {
+      margin-top: 20px;
+      color: #6b7280;
+      font-size: 14px;
     }
   </style>
 </head>
-
 <body>
+  <div class="container">
+    <div class="card">
+      <div class="badge">MVP Demo</div>
+      <h1>AI Project Planner</h1>
+      <p class="subtitle">
+        Turn a simple idea into a structured project plan. This is a test version
+        using mock AI output for fast validation.
+      </p>
 
-<h1>AI Project Planner</h1>
+      <div class="input-group">
+        <input
+          type="text"
+          id="projectInput"
+          placeholder="Example: Build an AI SaaS for project planning"
+        />
+        <button onclick="generatePlan()">Generate Plan</button>
+      </div>
 
-<p>Your AI-powered project planning assistant.</p>
+      <div id="result" class="result">
+        <div class="plan-header" id="planTitle"></div>
 
-<p>🚀 First version is coming.</p>
+        <div class="phase">
+          <h3>Phase 1 – Research & Planning</h3>
+          <ul>
+            <li>Define target users and core use case</li>
+            <li>Analyze competitors and similar tools</li>
+            <li>Draft MVP scope and success metrics</li>
+          </ul>
+        </div>
 
+        <div class="phase">
+          <h3>Phase 2 – Design & Build</h3>
+          <ul>
+            <li>Create wireframe for landing page and planner page</li>
+            <li>Build basic frontend structure</li>
+            <li>Implement task generation workflow</li>
+          </ul>
+        </div>
+
+        <div class="phase">
+          <h3>Phase 3 – Launch & Improve</h3>
+          <ul>
+            <li>Deploy the first version</li>
+            <li>Collect feedback from early users</li>
+            <li>Refine features and improve usability</li>
+          </ul>
+        </div>
+
+        <p class="footer-note">
+          Next step: replace mock output with real OpenAI API response.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function generatePlan() {
+      const input = document.getElementById("projectInput").value.trim();
+      const result = document.getElementById("result");
+      const planTitle = document.getElementById("planTitle");
+
+      if (!input) {
+        alert("Please enter a project idea first.");
+        return;
+      }
+
+      planTitle.textContent = `Generated plan for: ${input}`;
+      result.style.display = "block";
+    }
+  </script>
 </body>
 </html>
