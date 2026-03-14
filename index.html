@@ -17,7 +17,7 @@
     }
 
     .container {
-      max-width: 900px;
+      max-width: 960px;
       margin: 60px auto;
       padding: 24px;
     }
@@ -85,6 +85,17 @@
     .plan-header {
       font-size: 22px;
       margin-bottom: 18px;
+      font-weight: 700;
+    }
+
+    .summary-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      color: #1e3a8a;
+      line-height: 1.6;
     }
 
     .phase {
@@ -121,8 +132,29 @@
       margin-bottom: 12px;
     }
 
+    .meta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .meta-item {
+      background: #f3f4f6;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      color: #374151;
+    }
+
     .footer-note {
       margin-top: 20px;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .empty-tip {
+      margin-top: 12px;
       color: #6b7280;
       font-size: 14px;
     }
@@ -134,8 +166,8 @@
       <div class="badge">MVP Demo</div>
       <h1>AI Project Planner</h1>
       <p class="subtitle">
-        Turn a simple idea into a structured project plan. This is a test version
-        using mock AI output for fast validation.
+        Turn a simple idea into a structured project plan. This version uses
+        smart mock data to simulate AI-generated project output.
       </p>
 
       <div class="input-group">
@@ -147,55 +179,240 @@
         <button onclick="generatePlan()">Generate Plan</button>
       </div>
 
+      <p class="empty-tip">
+        Try examples like: AI SaaS, e-commerce website, mobile app, internal tool
+      </p>
+
       <div id="result" class="result">
         <div class="plan-header" id="planTitle"></div>
 
-        <div class="phase">
-          <h3>Phase 1 – Research & Planning</h3>
-          <ul>
-            <li>Define target users and core use case</li>
-            <li>Analyze competitors and similar tools</li>
-            <li>Draft MVP scope and success metrics</li>
-          </ul>
+        <div class="meta">
+          <div class="meta-item" id="planType"></div>
+          <div class="meta-item" id="planDuration"></div>
+          <div class="meta-item" id="planPriority"></div>
         </div>
 
-        <div class="phase">
-          <h3>Phase 2 – Design & Build</h3>
-          <ul>
-            <li>Create wireframe for landing page and planner page</li>
-            <li>Build basic frontend structure</li>
-            <li>Implement task generation workflow</li>
-          </ul>
-        </div>
+        <div class="summary-box" id="planSummary"></div>
 
-        <div class="phase">
-          <h3>Phase 3 – Launch & Improve</h3>
-          <ul>
-            <li>Deploy the first version</li>
-            <li>Collect feedback from early users</li>
-            <li>Refine features and improve usability</li>
-          </ul>
-        </div>
+        <div id="phasesContainer"></div>
 
         <p class="footer-note">
-          Next step: replace mock output with real OpenAI API response.
+          Demo mode: this is simulated AI output. Next step is connecting real OpenAI responses.
         </p>
       </div>
     </div>
   </div>
 
   <script>
+    const plans = {
+      saas: {
+        type: "AI SaaS Project",
+        duration: "Estimated timeline: 8-12 weeks",
+        priority: "Priority: MVP launch",
+        summary:
+          "This plan focuses on validating the product idea quickly, shipping a usable MVP, and collecting early user feedback for an AI-powered SaaS tool.",
+        phases: [
+          {
+            title: "Phase 1 – Product Definition",
+            tasks: [
+              "Define target users and main pain points",
+              "Clarify MVP scope and core workflow",
+              "Write product positioning and success metrics"
+            ]
+          },
+          {
+            title: "Phase 2 – Design & Development",
+            tasks: [
+              "Design landing page and main planner interface",
+              "Build core input-to-plan generation flow",
+              "Prepare deployment and technical structure"
+            ]
+          },
+          {
+            title: "Phase 3 – Launch & Validation",
+            tasks: [
+              "Deploy MVP to production",
+              "Collect feedback from first users",
+              "Refine UX and prioritize next features"
+            ]
+          }
+        ]
+      },
+      ecommerce: {
+        type: "E-commerce Project",
+        duration: "Estimated timeline: 6-10 weeks",
+        priority: "Priority: fast online launch",
+        summary:
+          "This plan is designed for launching an online store quickly, with a focus on product setup, payment flow, and early conversion optimization.",
+        phases: [
+          {
+            title: "Phase 1 – Store Planning",
+            tasks: [
+              "Define product categories and target customers",
+              "Prepare pricing, logistics, and inventory approach",
+              "Benchmark competing stores and best practices"
+            ]
+          },
+          {
+            title: "Phase 2 – Store Setup",
+            tasks: [
+              "Design homepage, product page, and checkout flow",
+              "Set up product catalog and payment system",
+              "Prepare basic analytics and marketing tracking"
+            ]
+          },
+          {
+            title: "Phase 3 – Launch & Growth",
+            tasks: [
+              "Launch the store publicly",
+              "Run first traffic acquisition campaign",
+              "Optimize conversion and customer retention"
+            ]
+          }
+        ]
+      },
+      mobile: {
+        type: "Mobile App Project",
+        duration: "Estimated timeline: 10-14 weeks",
+        priority: "Priority: core app usability",
+        summary:
+          "This plan focuses on building a usable first version of a mobile app, validating the main user journey, and improving retention after launch.",
+        phases: [
+          {
+            title: "Phase 1 – App Strategy",
+            tasks: [
+              "Define user journey and main app use cases",
+              "Prioritize must-have features for version one",
+              "Draft app structure and navigation"
+            ]
+          },
+          {
+            title: "Phase 2 – UI & Development",
+            tasks: [
+              "Design key mobile screens and flows",
+              "Develop frontend and backend integration",
+              "Test core features across target devices"
+            ]
+          },
+          {
+            title: "Phase 3 – Release & Iteration",
+            tasks: [
+              "Prepare beta release or app store submission",
+              "Collect user feedback and bug reports",
+              "Improve onboarding and feature adoption"
+            ]
+          }
+        ]
+      },
+      general: {
+        type: "General Project Plan",
+        duration: "Estimated timeline: 4-8 weeks",
+        priority: "Priority: structured execution",
+        summary:
+          "This plan provides a general structure for taking a new project from idea to execution, with clear stages for planning, building, and improvement.",
+        phases: [
+          {
+            title: "Phase 1 – Discovery",
+            tasks: [
+              "Clarify project goals and expected outcomes",
+              "Identify stakeholders and constraints",
+              "Break down scope into manageable workstreams"
+            ]
+          },
+          {
+            title: "Phase 2 – Execution",
+            tasks: [
+              "Start implementation of core deliverables",
+              "Track progress and adjust priorities",
+              "Coordinate resources and resolve blockers"
+            ]
+          },
+          {
+            title: "Phase 3 – Review & Improve",
+            tasks: [
+              "Evaluate project results against goals",
+              "Summarize learnings and open issues",
+              "Plan the next iteration or expansion"
+            ]
+          }
+        ]
+      }
+    };
+
+    function detectPlanType(input) {
+      const text = input.toLowerCase();
+
+      if (
+        text.includes("saas") ||
+        text.includes("ai") ||
+        text.includes("software") ||
+        text.includes("web app")
+      ) {
+        return plans.saas;
+      }
+
+      if (
+        text.includes("e-commerce") ||
+        text.includes("ecommerce") ||
+        text.includes("store") ||
+        text.includes("shop")
+      ) {
+        return plans.ecommerce;
+      }
+
+      if (
+        text.includes("mobile") ||
+        text.includes("app") ||
+        text.includes("ios") ||
+        text.includes("android")
+      ) {
+        return plans.mobile;
+      }
+
+      return plans.general;
+    }
+
     function generatePlan() {
       const input = document.getElementById("projectInput").value.trim();
       const result = document.getElementById("result");
       const planTitle = document.getElementById("planTitle");
+      const planType = document.getElementById("planType");
+      const planDuration = document.getElementById("planDuration");
+      const planPriority = document.getElementById("planPriority");
+      const planSummary = document.getElementById("planSummary");
+      const phasesContainer = document.getElementById("phasesContainer");
 
       if (!input) {
         alert("Please enter a project idea first.");
         return;
       }
 
+      const selectedPlan = detectPlanType(input);
+
       planTitle.textContent = `Generated plan for: ${input}`;
+      planType.textContent = selectedPlan.type;
+      planDuration.textContent = selectedPlan.duration;
+      planPriority.textContent = selectedPlan.priority;
+      planSummary.textContent = selectedPlan.summary;
+
+      phasesContainer.innerHTML = "";
+
+      selectedPlan.phases.forEach((phase) => {
+        const phaseDiv = document.createElement("div");
+        phaseDiv.className = "phase";
+
+        const taskItems = phase.tasks
+          .map((task) => `<li>${task}</li>`)
+          .join("");
+
+        phaseDiv.innerHTML = `
+          <h3>${phase.title}</h3>
+          <ul>${taskItems}</ul>
+        `;
+
+        phasesContainer.appendChild(phaseDiv);
+      });
+
       result.style.display = "block";
     }
   </script>
