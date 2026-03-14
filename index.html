@@ -195,6 +195,8 @@
         <div class="summary-box" id="planSummary"></div>
 
         <div id="phasesContainer"></div>
+        
+        <div id="timelineContainer" style="margin-top:40px;"></div>
 
         <p class="footer-note">
           Demo mode: this is simulated AI output. Next step is connecting real OpenAI responses.
@@ -414,7 +416,43 @@
       });
 
       result.style.display = "block";
+      renderTimeline();
     }
+
+    function renderTimeline() {
+
+  const timeline = [
+    { name: "Research", start: 0, duration: 2 },
+    { name: "Design", start: 2, duration: 2 },
+    { name: "Development", start: 4, duration: 4 },
+    { name: "Launch", start: 8, duration: 1 }
+  ];
+
+  const container = document.getElementById("timelineContainer");
+
+  container.innerHTML = `
+  <h2 style="margin-bottom:16px;">Project Timeline</h2>
+  <div style="border:1px solid #e5e7eb;border-radius:12px;padding:20px;">
+  ${timeline.map(task => `
+    <div style="margin-bottom:16px;">
+      <div style="font-size:14px;margin-bottom:6px;">${task.name}</div>
+      <div style="background:#e5e7eb;height:14px;border-radius:6px;position:relative;">
+        <div style="
+          position:absolute;
+          left:${task.start*60}px;
+          width:${task.duration*60}px;
+          height:14px;
+          background:#2563eb;
+          border-radius:6px;
+        "></div>
+      </div>
+    </div>
+  `).join("")}
+  </div>
+  `;
+}
   </script>
+
+  
 </body>
 </html>
