@@ -374,107 +374,158 @@
       return plans.general;
     }
 
-    function generatePlan() {
-      const input = document.getElementById("projectInput").value.trim();
-      const result = document.getElementById("result");
-      const planTitle = document.getElementById("planTitle");
-      const planType = document.getElementById("planType");
-      const planDuration = document.getElementById("planDuration");
-      const planPriority = document.getElementById("planPriority");
-      const planSummary = document.getElementById("planSummary");
-      const phasesContainer = document.getElementById("phasesContainer");
+async function generatePlan() {
 
-      if (!input) {
-        alert("Please enter a project idea first.");
-        return;
-      }
+  const input = document.getElementById("projectInput").value.trim();
 
-      const selectedPlan = detectPlanType(input);
+  const result = document.getElementById("result");
+  const planTitle = document.getElementById("planTitle");
+  const planType = document.getElementById("planType");
+  const planDuration = document.getElementById("planDuration");
+  const planPriority = document.getElementById("planPriority");
+  const planSummary = document.getElementById("planSummary");
+  const phasesContainer = document.getElementById("phasesContainer");
 
-      planTitle.textContent = `Generated plan for: ${input}`;
-      planType.textContent = selectedPlan.type;
-      planDuration.textContent = selectedPlan.duration;
-      planPriority.textContent = selectedPlan.priority;
-      planSummary.textContent = selectedPlan.summary;
+  if (!input) {
+    alert("Please enter a project idea first.");
+    return;
+  }
 
-      phasesContainer.innerHTML = "";
+  try {
 
-      selectedPlan.phases.forEach((phase) => {
-        const phaseDiv = document.createElement("div");
-        phaseDiv.className = "phase";
+    planTitle.textContent = "Generating...";
+    planSummary.textContent = "AI is generating your project plan...";
+    result.style.display = "block";
 
-        const taskItems = phase.tasks
-          .map((task) => `<li>${task}</li>`)
-          .join("");
+    const response = await fetch("/api/generate-plan", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        idea: input
+      })
+    });
 
-        phaseDiv.innerHTML = `
-          <h3>${phase.title}</h3>
-          <ul>${taskItems}</ul>
-        `;
+    const data = await response.json();
 
-        phasesContainer.appendChild(phaseDiv);
-      });
+    planTitle.textContent = data.projectTitle;
+    planType.textContent = data.projectType;
+    planDuration.textContent = data.duration;
+    planPriority.textContent = data.priority;
+    planSummary.textContent = data.summary;
 
-      result.style.display = "block";
-      renderTimeline();
-    }
+    phasesContainer.innerHTML = "";
 
-function renderTimeline() {
+    data.phases.forEach((phase) => {
 
-  // 模拟 AI 输出
-  const aiTasks = [
-    {task:"Market Research", start:0, duration:2},
-    {task:"Product Design", start:2, duration:2},
-    {task:"MVP Development", start:4, duration:4},
-    {task:"Launch", start:8, duration:1}
-  ];
+      const phaseDiv = document.createElement("div");
+      phaseDiv.className = "phase";
 
-  const container = document.getElementById("timelineContainer");
+      const tasks = phase.tasks.map(task => `<li>${task}</li>`).join("");
 
-  container.innerHTML = `
-  <h2 style="margin-bottom:16px;">Project Timeline</h2>
+      phaseDiv.innerHTML = `
+        <h3>${phase.title}</h3>
+        <ul>${tasks}</ul>
+      `;
 
-  <div style="
-  border:1px solid #e5e7eb;
-  border-radius:12px;
-  padding:20px;
-  ">
+      phasesContainer.appendChild(phaseDiv);
 
-  ${aiTasks.map(task => `
-    <div style="margin-bottom:18px">
+    });
 
-      <div style="
-      font-size:14px;
-      margin-bottom:6px;
-      font-weight:600;
-      ">
-      ${task.task}
-      </div>
+    renderTimeline(data.timeline);
 
-      <div style="
-      background:#e5e7eb;
-      height:14px;
-      border-radius:6px;
-      position:relative;
-      ">
+  } catch (error) {
 
+    planTitle.textContent = "Error";
+    planSummary.textContent = "Failed to generate plan.";
+
+  }
+
+}
+    
+function renderTimeline(tasks) {
+  const timelineContainer = document.getElementById("timelineContainer");
+
+  if (!tasks || tasks.length === 0) {
+    timelineContainer.innerHTML = "";
+    return;
+  }
+
+  const maxEnd = Math.max(...tasks.map(task => task.start + task.duration), 1);
+
+  const timelineHeader = Array.from({ length: maxEnd }, (_, i) => {
+    return `<div style="
+      min-width: 80px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+    ">W${i + 1}</div>`;
+  }).join("");
+
+  const timelineRows = tasks.map(task => {
+    return `
+      <div style="margin-bottom: 20px;">
         <div style="
-        position:absolute;
-        left:${task.start*80}px;
-        width:${task.duration*80}px;
-        height:14px;
-        background:#2563eb;
-        border-radius:6px;
+          font-size: 14px;
+          font-weight: 600;
+          margin-bottom: 8px;
+          color: #111827;
         ">
-
+          ${task.task}
         </div>
 
+        <div style="
+          position: relative;
+          display: flex;
+          align-items: center;
+          height: 32px;
+          border-radius: 8px;
+          background: #f3f4f6;
+          overflow: hidden;
+        ">
+          <div style="
+            margin-left: ${task.start * 80}px;
+            width: ${task.duration * 80}px;
+            height: 20px;
+            background: linear-gradient(90deg, #2563eb, #3b82f6);
+            border-radius: 999px;
+          "></div>
+        </div>
       </div>
+    `;
+  }).join("");
 
+  timelineContainer.innerHTML = `
+    <div class="timeline-section" style="margin-top: 32px;">
+      <h2 style="
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: #111827;
+      ">
+        Project Timeline
+      </h2>
+
+      <div style="
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 20px;
+        background: #ffffff;
+      ">
+        <div style="
+          display: flex;
+          gap: 0;
+          margin-bottom: 20px;
+          padding-left: 0;
+        ">
+          ${timelineHeader}
+        </div>
+
+        ${timelineRows}
+      </div>
     </div>
-  `).join("")}
-
-  </div>
   `;
 }
 
