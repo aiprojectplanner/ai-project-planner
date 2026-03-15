@@ -74,6 +74,10 @@ web_modules/
 .cache
 .parcel-cache
 
+# AI Project Planner Context Files (Long-term memory)
+AI_PROJECT_PLANNER_MASTER_CONTEXT.md
+AI_SYSTEM_CONTEXT.md
+
 # Next.js build output
 .next
 out
@@ -137,3 +141,5 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+.vercel
+.env*.local

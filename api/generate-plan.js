@@ -36,15 +36,19 @@ Use exactly this schema:
       "start": 0,
       "duration": 1
     }
-  ]
+  ],
+  "recommendedTools": ["string", "string"],
+  "keyRisks": ["string", "string"]
 }
 
 Rules:
-- 3 phases preferred
-- 3 tasks per phase preferred
-- timeline should have 4 to 6 items
-- start must be 0 or greater
-- duration must be at least 1
+- 3 to 4 phases preferred
+- 3 to 5 tasks per phase preferred
+- timeline should have 5 to 8 items
+- start must be 0 or greater (weeks)
+- duration must be at least 1 (weeks)
+- recommendedTools should list specific software or technologies
+- keyRisks should list potential blockers or challenges
 - keep output concise and product-oriented
 `;
 
@@ -109,6 +113,8 @@ Rules:
     parsed.summary = parsed.summary || "This plan provides a structured path from idea to execution.";
     parsed.phases = Array.isArray(parsed.phases) ? parsed.phases : [];
     parsed.timeline = Array.isArray(parsed.timeline) ? parsed.timeline : [];
+    parsed.recommendedTools = Array.isArray(parsed.recommendedTools) ? parsed.recommendedTools : [];
+    parsed.keyRisks = Array.isArray(parsed.keyRisks) ? parsed.keyRisks : [];
 
     return res.status(200).json(parsed);
   } catch (error) {
