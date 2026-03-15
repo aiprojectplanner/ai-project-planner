@@ -1,45 +1,120 @@
-export default function handler(req, res) {
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
   const { idea } = req.body || {};
 
   if (!idea || !idea.trim()) {
-    return res.status(400).json({
-      error: "Project idea is required"
-    });
+    return res.status(400).json({ error: "Project idea is required" });
   }
 
-  const text = idea.toLowerCase();
+  const prompt = `
+You are an AI project planning assistant.
 
-  let responseData = {
-    projectTitle: `Generated plan for: ${idea}`,
-    projectType: "AI SaaS Project",
-    duration: "Estimated timeline: 8-12 weeks",
-    priority: "Priority: MVP launch",
-    summary: "This is a mock plan for now.",
-    phases: [
-      {
-        title: "Phase 1 – Planning",
-        tasks: [
-          "Define project goals",
-          "Identify target users",
-          "Outline MVP scope"
-        ]
+Create a structured project plan for this idea:
+"${idea}"
+
+Return JSON only. Do not add markdown, explanation, or code fences.
+
+Use exactly this schema:
+{
+  "projectTitle": "string",
+  "projectType": "string",
+  "duration": "string",
+  "priority": "string",
+  "summary": "string",
+  "phases": [
+    {
+      "title": "string",
+      "tasks": ["string", "string", "string"]
+    }
+  ],
+  "timeline": [
+    {
+      "task": "string",
+      "start": 0,
+      "duration": 1
+    }
+  ]
+}
+
+Rules:
+- 3 phases preferred
+- 3 tasks per phase preferred
+- timeline should have 4 to 6 items
+- start must be 0 or greater
+- duration must be at least 1
+- keep output concise and product-oriented
+`;
+
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": process.env.SITE_URL || "https://ai-project-planner-psi.vercel.app",
+        "X-OpenRouter-Title": process.env.SITE_NAME || "AI Project Planner"
       },
-      {
-        title: "Phase 2 – Build",
-        tasks: [
-          "Design product interface",
-          "Develop core features",
-          "Test main workflows"
-        ]
-      }
-    ],
-    timeline: [
-      { task: "Research", start: 0, duration: 2 },
-      { task: "Design", start: 2, duration: 2 },
-      { task: "Development", start: 4, duration: 4 },
-      { task: "Launch", start: 8, duration: 1 }
-    ]
-  };
+      body: JSON.stringify({
+        model: process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content: "You must return valid JSON only."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.4
+      })
+    });
 
-  return res.status(200).json(responseData);
+    const data = await response.json();
+
+    if (!response.ok) {
+      return res.status(response.status).json({
+        error: "OpenRouter request failed",
+        details: data
+      });
+    }
+
+    const text = data?.choices?.[0]?.message?.content;
+
+    if (!text) {
+      return res.status(500).json({
+        error: "Model returned empty content",
+        details: data
+      });
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      return res.status(500).json({
+        error: "Model did not return valid JSON",
+        raw: text
+      });
+    }
+
+    // basic normalization
+    parsed.projectTitle = parsed.projectTitle || `Generated plan for: ${idea}`;
+    parsed.projectType = parsed.projectType || "General Project";
+    parsed.duration = parsed.duration || "Estimated timeline: 4-8 weeks";
+    parsed.priority = parsed.priority || "Priority: structured execution";
+    parsed.summary = parsed.summary || "This plan provides a structured path from idea to execution.";
+    parsed.phases = Array.isArray(parsed.phases) ? parsed.phases : [];
+    parsed.timeline = Array.isArray(parsed.timeline) ? parsed.timeline : [];
+
+    return res.status(200).json(parsed);
+  } catch (error) {
+    return res.status(500).json({
+      error: "Server error while generating plan",
+      details: error.message
+    });
+  }
 }
