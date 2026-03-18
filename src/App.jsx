@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom'
-import { LayoutDashboard, ProjectDiagram, MagicWand, BarChart3, Bell, Plus, Brain, LogOut, Loader2 } from 'lucide-react'
+import { LayoutDashboard, GanttChart, Wand2, BarChart, Bell, Brain, LogOut, Loader2 } from 'lucide-react'
 
 import Dashboard from './pages/Dashboard'
 import ProjectEditor from './pages/ProjectEditor'
@@ -28,7 +28,7 @@ const ProtectedRoute = ({ children }) => {
 
 const PageHeader = () => {
   const location = useLocation()
-  const { user, signOut } = useAuthStore()
+  const { signOut } = useAuthStore()
   
   const getPageTitle = () => {
     switch(location.pathname) {
@@ -67,7 +67,7 @@ const App = () => {
 
   useEffect(() => {
     initialize()
-  }, [])
+  }, [initialize])
 
   return (
     <Router>
@@ -82,20 +82,20 @@ const App = () => {
           </div>
 
           <nav className="flex-1 px-4 py-6 space-y-1">
-            <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <NavLink to="/" className={({ isActive }) => `nav-item group ${isActive ? 'active' : ''}`}>
               <LayoutDashboard size={20} className="text-slate-500 group-[.active]:text-indigo-400" />
               <span className="font-medium text-sm">Dashboard</span>
             </NavLink>
-            <NavLink to="/editor" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <ProjectDiagram size={20} className="text-slate-500 group-[.active]:text-indigo-400" />
+            <NavLink to="/editor" className={({ isActive }) => `nav-item group ${isActive ? 'active' : ''}`}>
+              <GanttChart size={20} className="text-slate-500 group-[.active]:text-indigo-400" />
               <span className="font-medium text-sm">Project Editor</span>
             </NavLink>
-            <NavLink to="/ai-planner" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <MagicWand size={20} className="text-slate-500 group-[.active]:text-indigo-400" />
+            <NavLink to="/ai-planner" className={({ isActive }) => `nav-item group ${isActive ? 'active' : ''}`}>
+              <Wand2 size={20} className="text-slate-500 group-[.active]:text-indigo-400" />
               <span className="font-medium text-sm">AI Planner</span>
             </NavLink>
             <div className="nav-item opacity-50 cursor-not-allowed">
-              <BarChart3 size={20} className="text-slate-500" />
+              <BarChart size={20} className="text-slate-500" />
               <span className="font-medium text-sm">Analytics</span>
             </div>
           </nav>
