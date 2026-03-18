@@ -1,6 +1,8 @@
 import { create } from 'zustand'
+import { supabase } from '../lib/supabaseClient'
 
-const useProjectStore = create((set) => ({
+const useProjectStore = create((set, get) => ({
+  projectId: null, // Track the current project's database ID
   projectTitle: "Project Roadmap 2026",
   projectStartDate: '2026-03-16',
   projectEndDate: '2026-04-12',
@@ -10,6 +12,53 @@ const useProjectStore = create((set) => ({
     { id: 2, name: "Define MVP Scope", start: "2026-03-20", end: "2026-03-25", dep: "1" }
   ],
   setProjectTitle: (title) => set({ projectTitle: title }),
+  
+  // Save current project to Supabase
+  saveProject: async (userId) => {
+    if (!userId) throw new Error('User not authenticated')
+    
+    const { projectId, projectTitle, tasks } = get()
+    
+    // Ensure data matches the database schema
+    const projectData = {
+      user_id: userId,
+      title: projectTitle,
+      tasks: tasks,
+      updated_at: new Date().toISOString()
+    }
+
+    let result
+    if (projectId) {
+      // Update existing project
+      result = await supabase
+        .from('projects')
+        .update(projectData)
+        .eq('id', projectId)
+        .select()
+    } else {
+      // Insert new project
+      result = await supabase
+        .from('projects')
+        .insert(projectData)
+        .select()
+    }
+
+    const { data, error } = result
+    if (error) throw error
+    
+    if (data && data[0]) {
+      set({ projectId: data[0].id })
+    }
+    return data[0]
+  },
+
+  // Load a project from Supabase
+  loadProject: (project) => set({
+    projectId: project.id,
+    projectTitle: project.title,
+    tasks: project.tasks
+  }),
+
   addTask: () => set((state) => {
     const lastTask = state.tasks[state.tasks.length - 1]
     const newStart = lastTask ? lastTask.end : state.projectStartDate
