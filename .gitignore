@@ -74,9 +74,13 @@ web_modules/
 .cache
 .parcel-cache
 
-# AI Project Planner Context Files (Long-term memory)
-AI_PROJECT_PLANNER_MASTER_CONTEXT.md
-AI_SYSTEM_CONTEXT.md
+# AI Project Planner Context Files (Root-only, local/private)
+/AI_PROJECT_PLANNER_MASTER_CONTEXT.md
+/AI_SYSTEM_CONTEXT.md
+
+# Strategic documents (keep private; do not commit)
+docs/strategy/*.md
+!docs/strategy/README.md
 
 # Next.js build output
 .next
