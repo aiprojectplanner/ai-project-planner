@@ -1,10 +1,15 @@
-import React, { useMemo } from 'react'
-import { ArrowLeft, Plus, Save, Trash2, Clock } from 'lucide-react'
+import React, { useMemo, useState } from 'react'
+import { ArrowLeft, Plus, Save, Trash2, Loader2, CheckCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useProjectStore from '../store/projectStore'
+import useAuthStore from '../store/authStore'
 
 const ProjectEditor = () => {
   const navigate = useNavigate()
+  const { user } = useAuthStore()
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveStatus, setSaveStatus] = useState(null) // 'success' | 'error' | null
+
   const { 
     projectTitle, 
     projectStartDate, 
@@ -13,7 +18,8 @@ const ProjectEditor = () => {
     setProjectTitle, 
     addTask, 
     updateTask, 
-    deleteTask 
+    deleteTask,
+    saveProject
   } = useProjectStore()
 
   const calculateDuration = (start, end) => {
@@ -40,9 +46,21 @@ const ProjectEditor = () => {
     ))
   }, [])
 
-  const saveProject = () => {
-    alert(`Project "${projectTitle}" saved successfully!`)
-    navigate('/')
+  const handleSave = async () => {
+    if (!user) return
+    setIsSaving(true)
+    setSaveStatus(null)
+
+    try {
+      await saveProject(user.id)
+      setSaveStatus('success')
+      setTimeout(() => setSaveStatus(null), 3000)
+    } catch (error) {
+      console.error('Error saving project:', error)
+      setSaveStatus('error')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -64,6 +82,16 @@ const ProjectEditor = () => {
           />
         </div>
         <div className="flex items-center gap-3">
+          {saveStatus === 'success' && (
+            <span className="text-emerald-500 text-xs font-bold flex items-center gap-1 animate-fade-in">
+              <CheckCircle size={14} /> Saved
+            </span>
+          )}
+          {saveStatus === 'error' && (
+            <span className="text-red-500 text-xs font-bold animate-fade-in">
+              Error saving
+            </span>
+          )}
           <button 
             onClick={addTask} 
             className="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all flex items-center gap-2"
@@ -71,10 +99,12 @@ const ProjectEditor = () => {
             <Plus size={18} /> Add Task
           </button>
           <button 
-            onClick={saveProject}
-            className="bg-slate-900 text-white px-6 py-2 rounded-xl text-sm font-black hover:bg-slate-800 shadow-lg shadow-slate-200 transition-all flex items-center gap-2"
+            onClick={handleSave}
+            disabled={isSaving}
+            className="bg-slate-900 text-white px-6 py-2 rounded-xl text-sm font-black hover:bg-slate-800 shadow-lg shadow-slate-200 transition-all flex items-center gap-2 disabled:opacity-50"
           >
-            <Save size={18} /> Save Project
+            {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+            {isSaving ? 'Saving...' : 'Save Project'}
           </button>
         </div>
       </header>

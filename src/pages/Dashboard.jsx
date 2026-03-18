@@ -1,17 +1,71 @@
-import React from 'react'
-import { Plus, Brain, Users, Clock, CheckCircle2 } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { Plus, Brain, Clock, CheckCircle2, Loader2, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabaseClient'
+import useAuthStore from '../store/authStore'
+import useProjectStore from '../store/projectStore'
 
 const Dashboard = () => {
   const navigate = useNavigate()
-  const projectCount = 2
+  const { user } = useAuthStore()
+  const { loadProject } = useProjectStore()
+  const [projects, setProjects] = useState([])
+  const [loading, setLoading] = useState(true)
+
   const maxProjects = 3
 
+  useEffect(() => {
+    if (user) {
+      fetchProjects()
+    }
+  }, [user])
+
+  const fetchProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (error) throw error
+      setProjects(data || [])
+    } catch (error) {
+      console.error('Error fetching projects:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleProjectClick = (project) => {
+    loadProject(project)
+    navigate('/editor')
+  }
+
   const createNewProject = () => {
-    if (projectCount >= maxProjects) {
+    if (projects.length >= maxProjects) {
       alert("Project limit reached (Free Plan). Upgrade to Pro!")
     } else {
+      // Clear current project state before navigating to editor
+      useProjectStore.setState({ projectId: null, projectTitle: "New Project", tasks: [] })
       navigate('/editor')
+    }
+  }
+
+  const deleteProject = async (e, id) => {
+    e.stopPropagation() // Prevent navigating to editor
+    if (!confirm('Are you sure you want to delete this project?')) return
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id)
+      
+      if (error) throw error
+      setProjects(projects.filter(p => p.id !== id))
+    } catch (error) {
+      console.error('Error deleting project:', error)
+      alert('Failed to delete project')
     }
   }
 
@@ -22,7 +76,7 @@ const Dashboard = () => {
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Dashboard</h1>
           <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">
-            Free Plan · {projectCount}/{maxProjects} Projects Used
+            Free Plan · {projects.length}/{maxProjects} Projects Used
           </p>
         </div>
         <button 
@@ -35,7 +89,7 @@ const Dashboard = () => {
 
       {/* AI Promotion Banner */}
       <div className="bg-slate-900 p-10 rounded-[40px] shadow-2xl mb-12 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
         
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
           <div className="w-16 h-16 bg-white/10 text-indigo-400 rounded-2xl flex items-center justify-center text-2xl border border-white/10 backdrop-blur-sm shrink-0">
@@ -44,7 +98,7 @@ const Dashboard = () => {
           <div>
             <h3 className="text-white text-xl font-black tracking-tight mb-1">Generate Project with AI</h3>
             <p className="text-slate-400 text-sm font-medium max-w-md">
-              Coming soon for Pro users. Describe your idea and get a full roadmap.
+              Describe your idea and get a full roadmap. AI generated plans will be automatically saved.
             </p>
           </div>
         </div>
@@ -53,7 +107,7 @@ const Dashboard = () => {
           onClick={() => navigate('/ai-planner')}
           className="relative z-10 px-8 py-3 bg-white/10 text-white font-bold rounded-xl border border-white/20 hover:bg-white/20 transition-all text-xs uppercase tracking-widest backdrop-blur-sm"
         >
-          Learn More
+          Start AI Generation
         </button>
       </div>
 
@@ -61,57 +115,55 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         <h2 className="col-span-full font-black text-xs text-slate-400 uppercase tracking-widest mb-2">My Projects</h2>
         
-        {/* Project Card 1 */}
-        <div 
-          onClick={() => navigate('/editor')}
-          className="bg-white p-8 rounded-3xl border border-slate-200 hover:shadow-2xl hover:border-indigo-200 transition-all cursor-pointer group flex flex-col h-full"
-        >
-          <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mb-6 text-sm font-black border border-emerald-100 group-hover:bg-emerald-500 group-hover:text-white transition-all shrink-0">MA</div>
-          <h3 className="font-black text-slate-900 text-lg mb-2">Mobile App MVP</h3>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
-            <Clock size={10} /> Updated 2h ago · 8 weeks
-          </p>
-          <div className="mt-auto flex items-center justify-between">
-            <div className="flex -space-x-3">
-              <img src="https://ui-avatars.com/api/?name=U1&background=random" className="w-8 h-8 rounded-full border-2 border-white" alt="Avatar" />
-              <img src="https://ui-avatars.com/api/?name=U2&background=random" className="w-8 h-8 rounded-full border-2 border-white" alt="Avatar" />
-            </div>
-            <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full uppercase tracking-widest flex items-center gap-1">
-              <CheckCircle2 size={8} /> Active
-            </span>
+        {loading ? (
+          <div className="col-span-full flex justify-center py-12">
+            <Loader2 className="animate-spin text-indigo-500" size={48} />
           </div>
-        </div>
+        ) : (
+          <>
+            {projects.map((project) => (
+              <div 
+                key={project.id}
+                onClick={() => handleProjectClick(project)}
+                className="bg-white p-8 rounded-3xl border border-slate-200 hover:shadow-2xl hover:border-indigo-200 transition-all cursor-pointer group flex flex-col h-full relative"
+              >
+                <button 
+                  onClick={(e) => deleteProject(e, project.id)}
+                  className="absolute top-6 right-6 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                >
+                  <Trash2 size={16} />
+                </button>
 
-        {/* Project Card 2 */}
-        <div 
-          onClick={() => navigate('/editor')}
-          className="bg-white p-8 rounded-3xl border border-slate-200 hover:shadow-2xl hover:border-indigo-200 transition-all cursor-pointer group flex flex-col h-full"
-        >
-          <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mb-6 text-sm font-black border border-indigo-100 group-hover:bg-indigo-500 group-hover:text-white transition-all shrink-0">MC</div>
-          <h3 className="font-black text-slate-900 text-lg mb-2">Marketing Campaign</h3>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
-            <Clock size={10} /> Updated 1d ago · 4 weeks
-          </p>
-          <div className="mt-auto flex items-center justify-between">
-            <div className="flex -space-x-3">
-              <img src="https://ui-avatars.com/api/?name=U3&background=random" className="w-8 h-8 rounded-full border-2 border-white" alt="Avatar" />
-            </div>
-            <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full uppercase tracking-widest flex items-center gap-1">
-              <Plus size={8} /> Planning
-            </span>
-          </div>
-        </div>
+                <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mb-6 text-sm font-black border border-indigo-100 group-hover:bg-indigo-500 group-hover:text-white transition-all shrink-0 uppercase">
+                  {project.title.substring(0, 2)}
+                </div>
+                <h3 className="font-black text-slate-900 text-lg mb-2 truncate pr-8">{project.title}</h3>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
+                  <Clock size={10} /> {new Date(project.created_at).toLocaleDateString()}
+                </p>
+                <div className="mt-auto flex items-center justify-between">
+                  <div className="flex -space-x-3">
+                    <img src={`https://ui-avatars.com/api/?name=${user?.email}&background=random`} className="w-8 h-8 rounded-full border-2 border-white" alt="Avatar" />
+                  </div>
+                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full uppercase tracking-widest flex items-center gap-1">
+                    <CheckCircle2 size={8} /> Active
+                  </span>
+                </div>
+              </div>
+            ))}
 
-        {/* Add New Placeholder */}
-        <div 
-          onClick={createNewProject}
-          className="bg-slate-100/50 border-2 border-dashed border-slate-200 rounded-[40px] flex flex-col items-center justify-center p-12 hover:bg-white hover:border-indigo-200 hover:shadow-xl transition-all cursor-pointer group h-full"
-        >
-          <div className="w-16 h-16 bg-white text-slate-300 rounded-full flex items-center justify-center mb-6 group-hover:text-indigo-500 shadow-sm transition-all shrink-0">
-            <Plus size={24} />
-          </div>
-          <p className="text-xs font-black text-slate-400 group-hover:text-indigo-600 transition-all uppercase tracking-widest">Create New Project</p>
-        </div>
+            {/* Add New Placeholder */}
+            <div 
+              onClick={createNewProject}
+              className="bg-slate-100/50 border-2 border-dashed border-slate-200 rounded-[40px] flex flex-col items-center justify-center p-12 hover:bg-white hover:border-indigo-200 hover:shadow-xl transition-all cursor-pointer group h-full min-h-[280px]"
+            >
+              <div className="w-16 h-16 bg-white text-slate-300 rounded-full flex items-center justify-center mb-6 group-hover:text-indigo-500 shadow-sm transition-all shrink-0">
+                <Plus size={24} />
+              </div>
+              <p className="text-xs font-black text-slate-400 group-hover:text-indigo-600 transition-all uppercase tracking-widest">Create New Project</p>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
