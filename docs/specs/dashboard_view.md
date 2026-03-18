@@ -1,0 +1,27 @@
+# Feature: Dashboard View 
+ 
+ ## Purpose 
+ Provide a central hub for users to view their project portfolio and initiate new planning sessions. 
+ 
+ ## User Flow 
+ 1. User logs in. 
+ 2. Dashboard fetches all projects owned by the user. 
+ 3. User sees project cards with titles and last updated dates. 
+ 
+ ## Inputs 
+ - Current User ID (from Auth session) 
+ 
+ ## Processing Logic 
+- Fetch from `projects` table ordered by `created_at` DESC. 
+ - Filter results based on Supabase RLS. 
+ 
+ ## Database Tables 
+ - `projects` 
+ 
+ ## Expected Output 
+ - A list or grid of project cards. 
+ - Loading skeletons during fetch. 
+ 
+ ## Error Cases 
+ - Failed to fetch data. 
+ - Session expired. 
