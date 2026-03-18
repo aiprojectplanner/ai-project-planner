@@ -2,10 +2,12 @@ import React, { useState } from 'react'
 import { Sparkles, ArrowLeft, Send, Loader2, AlertCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useProjectStore from '../store/projectStore'
+import useAuthStore from '../store/authStore'
 
 const AIPlanner = () => {
   const navigate = useNavigate()
-  const importPlan = useProjectStore(state => state.importPlan)
+  const { user } = useAuthStore()
+  const { importPlan, saveProject } = useProjectStore()
   const [idea, setIdea] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -24,13 +26,46 @@ const AIPlanner = () => {
         body: JSON.stringify({ idea })
       })
 
-      const data = await response.json()
+      const contentType = response.headers.get('content-type') || ''
+      const rawText = await response.text()
+      let data = null
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate plan.')
+      if (rawText) {
+        if (contentType.includes('application/json')) {
+          try {
+            data = JSON.parse(rawText)
+          } catch (parseError) {
+            throw new Error('Invalid JSON response from /api/generate-plan.')
+          }
+        } else {
+          try {
+            data = JSON.parse(rawText)
+          } catch (_) {
+            data = null
+          }
+        }
       }
 
+      if (!response.ok) {
+        const message =
+          (data && (data.error || data.message)) ||
+          `Request failed (${response.status}).`
+        throw new Error(message)
+      }
+
+      if (!data) {
+        throw new Error('Empty response from /api/generate-plan.')
+      }
+
+      // 1. Import the AI data into store
       importPlan(data)
+      
+      // 2. Automatically save to Supabase
+      if (user) {
+        await saveProject(user.id)
+      }
+      
+      // 3. Go to editor
       navigate('/editor')
     } catch (err) {
       console.error('Error generating plan:', err)

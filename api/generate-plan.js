@@ -1,126 +1,91 @@
+import dotenv from 'dotenv'
+
+dotenv.config({ path: '.env.local' })
+dotenv.config({ path: '.env' })
+
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  // Set response headers early to avoid caching and ensure JSON responses.
+  res.setHeader('Content-Type', 'application/json');
 
-  const { idea } = req.body || {};
+  console.log("--- AI Generator Diagnostic Start ---");
+  console.log("Method:", req.method);
+  
+  try {
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method not allowed" });
+    }
 
-  if (!idea || !idea.trim()) {
-    return res.status(400).json({ error: "Project idea is required" });
-  }
+    const { idea } = req.body || {};
+    console.log("Received idea:", idea);
 
-  const prompt = `
+    if (!idea || !idea.trim()) {
+      return res.status(400).json({ error: "Project idea is required" });
+    }
+
+    // Strict API key validation.
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
+      console.error("CRITICAL ERROR: OPENROUTER_API_KEY is undefined in process.env");
+      return res.status(500).json({ 
+        error: "Server Configuration Error", 
+        message: "API Key is missing from the server environment. Please check .env.local" 
+      });
+    }
+
+    console.log("API Key found (length):", apiKey.length);
+
+    const prompt = `
 You are an AI project planning assistant.
-
-Create a structured project plan for this idea:
-"${idea}"
-
-Return JSON only. Do not add markdown, explanation, or code fences.
-
-Use exactly this schema:
-{
-  "projectTitle": "string",
-  "projectType": "string",
-  "duration": "string",
-  "priority": "string",
-  "summary": "string",
-  "phases": [
-    {
-      "title": "string",
-      "tasks": ["string", "string", "string"]
-    }
-  ],
-  "timeline": [
-    {
-      "task": "string",
-      "start": 0,
-      "duration": 1
-    }
-  ],
-  "recommendedTools": ["string", "string"],
-  "keyRisks": ["string", "string"]
-}
-
-Rules:
-- 3 to 4 phases preferred
-- 3 to 5 tasks per phase preferred
-- timeline should have 5 to 8 items
-- start must be 0 or greater (weeks)
-- duration must be at least 1 (weeks)
-- recommendedTools should list specific software or technologies
-- keyRisks should list potential blockers or challenges
-- keep output concise and product-oriented
+Create a structured project plan for: "${idea}"
+Return JSON only. No markdown.
+Schema: { "projectTitle": "string", "timeline": [{ "task": "string", "start": 0, "duration": 1 }] }
 `;
 
-  try {
+    console.log("Calling OpenRouter...");
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": process.env.SITE_URL || "https://ai-project-planner-psi.vercel.app",
-        "X-OpenRouter-Title": process.env.SITE_NAME || "AI Project Planner"
+        "Authorization": `Bearer ${apiKey.trim()}`,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: "You must return valid JSON only."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
+        model: "google/gemini-2.5-flash",
+        messages: [{ role: "user", content: prompt }],
         temperature: 0.4
       })
     });
 
     const data = await response.json();
+    console.log("OpenRouter Response Status:", response.status);
 
     if (!response.ok) {
+      console.error("OpenRouter Error Data:", JSON.stringify(data));
       return res.status(response.status).json({
-        error: "OpenRouter request failed",
+        error: "AI Service Error",
         details: data
       });
     }
 
     const text = data?.choices?.[0]?.message?.content;
+    console.log("AI Raw Text Received.");
 
-    if (!text) {
-      return res.status(500).json({
-        error: "Model returned empty content",
-        details: data
-      });
+    // Minimal JSON extraction from model output.
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("AI did not return a valid JSON object");
     }
-
-    let parsed;
-    try {
-      parsed = JSON.parse(text);
-    } catch (e) {
-      return res.status(500).json({
-        error: "Model did not return valid JSON",
-        raw: text
-      });
-    }
-
-    // basic normalization
-    parsed.projectTitle = parsed.projectTitle || `Generated plan for: ${idea}`;
-    parsed.projectType = parsed.projectType || "General Project";
-    parsed.duration = parsed.duration || "Estimated timeline: 4-8 weeks";
-    parsed.priority = parsed.priority || "Priority: structured execution";
-    parsed.summary = parsed.summary || "This plan provides a structured path from idea to execution.";
-    parsed.phases = Array.isArray(parsed.phases) ? parsed.phases : [];
-    parsed.timeline = Array.isArray(parsed.timeline) ? parsed.timeline : [];
-    parsed.recommendedTools = Array.isArray(parsed.recommendedTools) ? parsed.recommendedTools : [];
-    parsed.keyRisks = Array.isArray(parsed.keyRisks) ? parsed.keyRisks : [];
-
+    
+    const parsed = JSON.parse(jsonMatch[0]);
+    console.log("JSON Parsed Successfully.");
+    
     return res.status(200).json(parsed);
+
   } catch (error) {
+    console.error("DIAGNOSTIC CRASH:", error.message);
     return res.status(500).json({
-      error: "Server error while generating plan",
-      details: error.message
+      error: "Internal Diagnostic Error",
+      message: error.message,
+      stack: error.stack
     });
   }
 }
