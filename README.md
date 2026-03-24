@@ -17,6 +17,7 @@ Notes:
 - Do not debug `/api/*` endpoints via the Vite dev server port (for example `http://localhost:5173`), because `/api/*` routes are not served there by default.
 - `vercel dev` provides the port for the Vite dev server via `PORT`. The project dev script respects this automatically.
 - `OPENROUTER_API_KEY` must be available to the serverless runtime. For local development, the serverless function loads `.env.local` automatically.
+- Optional: set `OPENROUTER_MODELS` to a comma-separated list of OpenRouter model IDs (priority order) so `/api/generate-plan` can fall back when a model is unavailable in your region; see `.env.example`.
 
 ### Local Baseline Checklist (Before Debugging)
 - `http://localhost:3000/` loads successfully.

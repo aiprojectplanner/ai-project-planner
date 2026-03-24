@@ -10,7 +10,7 @@
  
  ## Backend (Serverless) 
  - **API Layer**: Vercel Serverless Functions (located in `/api`) handle AI logic and secure data processing. 
- - **AI Gateway**: Communicates with OpenRouter to fetch structured JSON plans from Gemini. 
+ - **AI Gateway**: Communicates with OpenRouter to fetch structured JSON plans; the concrete model IDs and failover order come from environment variables (`OPENROUTER_MODELS` / `OPENROUTER_MODEL`). 
  
  ## Database Layer (Supabase) 
  - **Relational Storage**: PostgreSQL stores user-owned projects and tasks. 
@@ -19,11 +19,11 @@
  
  ## Data Flow 
  
- ### 1. AI Generation Flow 
- User Request (Prompt) → `/api/generate-plan` → OpenRouter (Gemini) → JSON Response → Frontend Store → Gantt Visualization. 
+### 1. AI Generation Flow 
+User Request (Prompt) → `/api/generate-plan` → OpenRouter (configured LLM(s), with optional per-model failover) → JSON Response → Frontend Store → Gantt Visualization. 
  
- ### 2. Data Persistence Flow 
- User Edit (Editor) → Zustand Store (Local) → `supabase.from('projects').upsert()` → Supabase DB. 
+### 2. Data Persistence Flow 
+User Edit (Editor) → Zustand Store (Local) → `supabase.from('projects').insert()` or `.update()` (by project id) → Supabase DB. 
  
  ### 3. Authentication Flow 
  Login/Sign-up → Supabase Auth → JWT Session → Zustand `authStore` → Route Protection. 

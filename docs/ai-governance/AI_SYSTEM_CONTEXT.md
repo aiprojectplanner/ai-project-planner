@@ -38,9 +38,10 @@ AI assistants must follow these principles.
 
 - **Frontend**: React, Vite, Tailwind
 - **State**: Zustand
-- **Backend**: Supabase
+- **Backend / data**: Supabase (Auth + Postgres)
+- **Serverless API**: Vercel Functions for `/api/*` (for example AI plan generation)
 - **Deployment**: Vercel
-- **AI access**: LLM API through a provider abstraction layer (OpenAI, Anthropic, Gemini, DeepSeek, Qwen, OpenRouter).
+- **AI access**: LLM API through OpenRouter from serverless routes; model IDs and failover order are configured via environment variables (`OPENROUTER_MODELS` / `OPENROUTER_MODEL`).
 
 ## 5. AI Provider Policy
 

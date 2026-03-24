@@ -51,9 +51,9 @@ Code references:
 
 ### AI Planner
 - AI Planner UI submits an idea to `POST /api/generate-plan`.
-- Backend calls OpenRouter and returns JSON `{ projectTitle, timeline }`.
-- Frontend imports the plan into `projectStore`, auto-saves to Supabase for logged-in users, then navigates to `/editor`.
-- Anonymous users may generate a plan, but persistence to Supabase requires authentication.
+- Backend calls OpenRouter using a priority-ordered model list (`OPENROUTER_MODELS`, or `OPENROUTER_MODEL`, or code default) and returns JSON `{ projectTitle, timeline }` when a model succeeds.
+- Frontend imports the plan into `projectStore`, auto-saves to Supabase, then navigates to `/editor`.
+- AI Planner is behind authentication (same as Dashboard and Editor); unauthenticated users are redirected to `/auth`.
 - Frontend avoids blind `response.json()` and provides clearer errors for non-OK/non-JSON responses.
 
 Code references:
@@ -122,7 +122,7 @@ Evidence:
 - `src/store/projectStore.js`
 
 ### AI Integration
-- OpenRouter gateway, model currently set to `google/gemini-2.5-flash`.
+- OpenRouter gateway; model selection and failover are driven by `OPENROUTER_MODELS` / `OPENROUTER_MODEL` (see `api/generate-plan.js` and `.env.example`).
 
 Evidence:
 - `api/generate-plan.js`

@@ -124,7 +124,7 @@ If you want clearer separation of concerns, create a dedicated spec file with th
   - Response schema: `{ projectTitle, timeline: [{ task, start, duration }], ... }`
 - **Provider abstraction**
   - OpenRouter as gateway
-  - Model selection policy (`OPENROUTER_MODEL`)
+  - Model selection policy (`OPENROUTER_MODELS` priority list and `OPENROUTER_MODEL` fallback; see `api/generate-plan.js`)
 - **JSON validation**
   - How markdown fences are handled
   - JSON extraction strategy and parse failure behavior

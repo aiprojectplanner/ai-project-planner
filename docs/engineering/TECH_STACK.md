@@ -12,7 +12,7 @@
  
  ## Backend 
  - **Compute**: Vercel Serverless Functions (Node.js) 
- - **AI API**: OpenRouter (Unified access to LLMs like Gemini 2.5 Flash) 
+ - **AI API**: OpenRouter (unified gateway; model IDs and priority list configured via `OPENROUTER_MODELS` / `OPENROUTER_MODEL` in environment variables) 
  
  ## Database & Auth (BaaS) 
  - **Platform**: Supabase 
