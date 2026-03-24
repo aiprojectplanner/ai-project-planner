@@ -73,13 +73,14 @@ Evidence:
 - Roadmap: `docs/roadmap/ROADMAP.md` marks enforcement as not done.
 - Code: `src/pages/Dashboard.jsx` (UI gating) and `src/store/projectStore.js` (insert-time limit check).
 
-### Pro Gating for AI Generation (Not enforced)
+### Pro Gating for AI Generation (Interim enforced)
 - Strategy states AI generation is Pro-only.
-- Current code allows any authenticated user to use AI Planner.
+- Current server implementation gates `/api/generate-plan` by bearer auth + `PRO_USER_EMAILS` allowlist.
+- This is an interim Pro-gate implementation and not yet subscription-system driven.
 
 Evidence:
 - Strategy: `docs/strategy/PRODUCT_SCOPE.md` (AI generation not included in Free tier).
-- Code: `src/pages/AIPlanner.jsx` does not check plan tier before calling `/api/generate-plan`.
+- Code: `api/generate-plan.js` validates auth token and checks `PRO_USER_EMAILS`.
 
 ## Not Yet Implemented
 Referenced in strategy/roadmap but not present in current implementation:

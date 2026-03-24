@@ -25,7 +25,7 @@
  ## Expected Output 
  - JWT session token stored in browser via Supabase client. 
  - `user` object available in global state. 
- - Access to protected routes (Dashboard, Editor). 
+- Access to protected routes (Dashboard, Editor, AI Planner). 
  
  ## Error Cases 
  - **Invalid Credentials**: "Invalid login credentials" message. 

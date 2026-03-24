@@ -1,4 +1,5 @@
 import dotenv from 'dotenv'
+import { createClient } from '@supabase/supabase-js'
 
 dotenv.config({ path: '.env.local' })
 dotenv.config({ path: '.env' })
@@ -41,6 +42,64 @@ async function callOpenRouter({ apiKey, model, prompt }) {
   return { response, data }
 }
 
+function parseProEmails() {
+  return (process.env.PRO_USER_EMAILS || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean)
+}
+
+async function authenticateAndAuthorizeProUser(req) {
+  const authHeader = req.headers?.authorization || req.headers?.Authorization || ''
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : ''
+  if (!token) {
+    return { ok: false, status: 401, body: { error: 'Unauthorized', message: 'Missing bearer token.' } }
+  }
+
+  const supabaseUrl = process.env.VITE_SUPABASE_URL
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return {
+      ok: false,
+      status: 500,
+      body: { error: 'Server Configuration Error', message: 'Supabase env is missing for auth validation.' },
+    }
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(token)
+
+  if (error || !user) {
+    return { ok: false, status: 401, body: { error: 'Unauthorized', message: 'Invalid or expired token.' } }
+  }
+
+  const proEmails = parseProEmails()
+  if (proEmails.length === 0) {
+    return {
+      ok: false,
+      status: 500,
+      body: {
+        error: 'Server Configuration Error',
+        message: 'PRO_USER_EMAILS is not configured.',
+      },
+    }
+  }
+
+  const email = (user.email || '').toLowerCase()
+  if (!proEmails.includes(email)) {
+    return {
+      ok: false,
+      status: 403,
+      body: { error: 'Pro Plan Required', message: 'AI Planner is available for Pro users only.' },
+    }
+  }
+
+  return { ok: true, user }
+}
+
 export default async function handler(req, res) {
   // Set response headers early to avoid caching and ensure JSON responses.
   res.setHeader('Content-Type', 'application/json');
@@ -58,6 +117,11 @@ export default async function handler(req, res) {
 
     if (!idea || !idea.trim()) {
       return res.status(400).json({ error: "Project idea is required" });
+    }
+
+    const authz = await authenticateAndAuthorizeProUser(req)
+    if (!authz.ok) {
+      return res.status(authz.status).json(authz.body)
     }
 
     // Strict API key validation.

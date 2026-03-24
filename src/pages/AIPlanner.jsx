@@ -3,6 +3,7 @@ import { Sparkles, ArrowLeft, Send, Loader2, AlertCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useProjectStore from '../store/projectStore'
 import useAuthStore from '../store/authStore'
+import { supabase } from '../lib/supabaseClient'
 
 const AIPlanner = () => {
   const navigate = useNavigate()
@@ -20,9 +21,18 @@ const AIPlanner = () => {
     setError(null)
 
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const accessToken = session?.access_token
+      if (!accessToken) {
+        throw new Error('Please sign in again to use AI Planner.')
+      }
+
       const response = await fetch('/api/generate-plan', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
         body: JSON.stringify({ idea })
       })
 
