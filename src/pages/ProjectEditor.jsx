@@ -12,6 +12,7 @@ const ProjectEditor = () => {
   const [leftPanelWidth, setLeftPanelWidth] = useState(650)
   const [isTaskPanelCollapsed, setIsTaskPanelCollapsed] = useState(false)
   const resizeStateRef = useRef({ active: false })
+  const workspaceRef = useRef(null)
 
   const { 
     projectTitle, 
@@ -67,7 +68,10 @@ const ProjectEditor = () => {
   useEffect(() => {
     const onMouseMove = (e) => {
       if (!resizeStateRef.current.active || isTaskPanelCollapsed) return
-      const next = Math.min(860, Math.max(420, e.clientX))
+      const workspaceLeft = workspaceRef.current?.getBoundingClientRect().left || 0
+      const rawWidth = e.clientX - workspaceLeft
+      const maxAllowed = Math.min(860, Math.max(420, window.innerWidth - workspaceLeft - 360))
+      const next = Math.min(maxAllowed, Math.max(420, rawWidth))
       setLeftPanelWidth(next)
     }
     const onMouseUp = () => {
@@ -85,6 +89,10 @@ const ProjectEditor = () => {
   const startResizing = (e) => {
     e.preventDefault()
     resizeStateRef.current.active = true
+  }
+
+  const resetPanelWidth = () => {
+    setLeftPanelWidth(650)
   }
 
   const handleSave = async () => {
@@ -211,7 +219,7 @@ const ProjectEditor = () => {
       </header>
 
       {/* Main Workspace */}
-      <main className="flex-1 flex overflow-hidden">
+      <main ref={workspaceRef} className="flex-1 flex overflow-hidden">
         {/* Left: Task Table */}
         {!isTaskPanelCollapsed && (
           <div
@@ -296,9 +304,10 @@ const ProjectEditor = () => {
             {isTaskPanelCollapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
           </button>
           {!isTaskPanelCollapsed && (
-            <button
+            <div
               onMouseDown={startResizing}
-              className="w-2 h-16 rounded bg-slate-300 hover:bg-slate-400 cursor-col-resize"
+              onDoubleClick={resetPanelWidth}
+              className="w-2 flex-1 min-h-[80px] rounded bg-slate-300 hover:bg-slate-400 cursor-col-resize"
               title="Drag to resize task panel"
             />
           )}
@@ -326,7 +335,7 @@ const ProjectEditor = () => {
                   Math.ceil((new Date(task.start) - timelineMeta.minStart) / (1000 * 60 * 60 * 24))
                 )
                 const leftPercent = (startOffset / timelineMeta.spanDays) * 100
-                const widthPercent = (dur / timelineMeta.spanDays) * 100
+                const widthPercent = Math.max((dur / timelineMeta.spanDays) * 100, 1)
 
                 return (
                   <div key={task.id} className="h-10 border-b border-slate-50 relative">
