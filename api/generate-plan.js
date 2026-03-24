@@ -3,6 +3,44 @@ import dotenv from 'dotenv'
 dotenv.config({ path: '.env.local' })
 dotenv.config({ path: '.env' })
 
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
+
+function parseModelPriorityList() {
+  const raw = process.env.OPENROUTER_MODELS
+  if (raw && raw.trim()) {
+    return raw
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+  }
+  const single = process.env.OPENROUTER_MODEL && process.env.OPENROUTER_MODEL.trim()
+  if (single) return [single]
+  return ['google/gemini-2.5-flash']
+}
+
+/** HTTP status where trying the next model may help (region, capacity, upstream). */
+function shouldTryNextOpenRouterStatus(status) {
+  if (status === 401 || status === 400) return false
+  return [403, 404, 408, 409, 413, 429, 500, 502, 503, 504].includes(status)
+}
+
+async function callOpenRouter({ apiKey, model, prompt }) {
+  const response = await fetch(OPENROUTER_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey.trim()}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.4,
+    }),
+  })
+  const data = await response.json().catch(() => ({}))
+  return { response, data }
+}
+
 export default async function handler(req, res) {
   // Set response headers early to avoid caching and ensure JSON responses.
   res.setHeader('Content-Type', 'application/json');
@@ -41,44 +79,86 @@ Return JSON only. No markdown.
 Schema: { "projectTitle": "string", "timeline": [{ "task": "string", "start": 0, "duration": 1 }] }
 `;
 
-    console.log("Calling OpenRouter...");
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey.trim()}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.4
+    const models = parseModelPriorityList()
+    if (models.length === 0) {
+      return res.status(500).json({
+        error: 'Server Configuration Error',
+        message: 'No OpenRouter models configured. Set OPENROUTER_MODELS or OPENROUTER_MODEL.',
       })
-    });
-
-    const data = await response.json();
-    console.log("OpenRouter Response Status:", response.status);
-
-    if (!response.ok) {
-      console.error("OpenRouter Error Data:", JSON.stringify(data));
-      return res.status(response.status).json({
-        error: "AI Service Error",
-        details: data
-      });
     }
 
-    const text = data?.choices?.[0]?.message?.content;
-    console.log("AI Raw Text Received.");
+    console.log('OpenRouter model priority list:', models)
 
-    // Minimal JSON extraction from model output.
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("AI did not return a valid JSON object");
+    let lastFailure = null
+
+    for (const model of models) {
+      console.log('Calling OpenRouter with model:', model)
+      let response
+      let data
+      try {
+        const out = await callOpenRouter({ apiKey, model, prompt })
+        response = out.response
+        data = out.data
+      } catch (err) {
+        console.error('OpenRouter fetch failed for model', model, err.message)
+        lastFailure = { model, status: 0, details: { message: err.message } }
+        continue
+      }
+
+      console.log('OpenRouter Response Status:', response.status)
+
+      if (!response.ok) {
+        console.error('OpenRouter Error Data:', JSON.stringify(data))
+        lastFailure = { model, status: response.status, details: data }
+        if (shouldTryNextOpenRouterStatus(response.status)) {
+          continue
+        }
+        return res.status(response.status).json({
+          error: 'AI Service Error',
+          details: data,
+        })
+      }
+
+      const text = data?.choices?.[0]?.message?.content
+      console.log('AI Raw Text Received.')
+
+      if (!text || typeof text !== 'string') {
+        lastFailure = { model, status: response.status, details: { message: 'Empty model content' } }
+        continue
+      }
+
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) {
+        lastFailure = {
+          model,
+          status: response.status,
+          details: { message: 'AI did not return a valid JSON object' },
+        }
+        continue
+      }
+
+      let parsed
+      try {
+        parsed = JSON.parse(jsonMatch[0])
+      } catch (e) {
+        lastFailure = {
+          model,
+          status: response.status,
+          details: { message: 'JSON parse failed', error: e.message },
+        }
+        continue
+      }
+
+      console.log('JSON Parsed Successfully with model:', model)
+      return res.status(200).json(parsed)
     }
-    
-    const parsed = JSON.parse(jsonMatch[0]);
-    console.log("JSON Parsed Successfully.");
-    
-    return res.status(200).json(parsed);
+
+    console.error('All OpenRouter models failed. Last:', JSON.stringify(lastFailure))
+    return res.status(502).json({
+      error: 'AI Service Error',
+      message: 'All configured models failed or returned unusable output.',
+      lastAttempt: lastFailure,
+    })
 
   } catch (error) {
     console.error("DIAGNOSTIC CRASH:", error.message);
