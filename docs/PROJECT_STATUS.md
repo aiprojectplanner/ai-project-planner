@@ -73,8 +73,8 @@ Code references:
 ### Pricing
 - Protected `/pricing` route is available in the sidebar.
 - Page reads `profiles.plan_tier` and displays current plan (Free/Pro).
-- Free users can start upgrade flow via `VITE_LEMON_SQUEEZY_CHECKOUT_URL`.
-- Checkout completion and subscription webhook sync are not implemented yet.
+- Free users can redeem invite codes to enable Pro during promotion stage.
+- Automated payment checkout and webhook sync are intentionally deferred.
 
 Code references:
 - `src/pages/Pricing.jsx`
@@ -103,7 +103,7 @@ Evidence:
 
 ## Not Yet Implemented
 Referenced in strategy/roadmap but not present in current implementation:
-- Subscription integration webhook sync (Lemon Squeezy -> `profiles.plan_tier`).
+- Subscription integration webhook sync (Lemon Squeezy/Stripe -> `profiles.plan_tier`).
 - Export formats (PDF/Excel/Image).
 - Multi-language (i18n).
 - Task dependencies and automated timeline shifting.

@@ -16,6 +16,16 @@
 - `plan_tier`: Text (`free` or `pro`, default `free`)
 - `created_at`: Timestamp with timezone
 - `updated_at`: Timestamp with timezone
+
+### invite_codes
+- `code`: Text (Primary Key)
+- `is_active`: Boolean
+- `max_redemptions`: Integer
+- `redeemed_count`: Integer
+- `redeemed_by`: UUID (nullable, references `auth.users.id`)
+- `redeemed_at`: Timestamp with timezone (nullable)
+- `expires_at`: Timestamp with timezone (nullable)
+- `created_at`: Timestamp with timezone
  
  ## RLS Policies 
  - **Manage own projects**: Users can only read, insert, update, and delete their own projects where `auth.uid() = user_id`. 
@@ -28,3 +38,7 @@
 - This migration is non-destructive and does not alter existing project rows.
 - Proposed migration: `supabase/migrations/20260324_add_profiles_plan_tier.sql`
 - Purpose: add `profiles` table with `plan_tier`, RLS policies, signup trigger, and backfill for existing users.
+- Proposed migration: `supabase/migrations/20260324_invite_code_pro_access.sql`
+- Purpose: add invite-code redemption flow, lock down direct profile plan escalation, and provide secure `redeem_invite_code` RPC.
+- Proposed migration: `supabase/migrations/20260324_refine_invite_code_rules.sql`
+- Purpose: enforce 8-char alphanumeric format, 3-day default expiry, and one-time account binding for invite codes.

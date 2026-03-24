@@ -1,25 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { ExternalLink, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Loader2, KeyRound } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import useAuthStore from '../store/authStore'
-
-const CHECKOUT_URL = import.meta.env.VITE_LEMON_SQUEEZY_CHECKOUT_URL?.trim()
-
-const isPlaceholderCheckoutUrl = (url) => {
-  if (!url) return true
-  const normalized = url.toLowerCase()
-  return (
-    normalized === '#coming-soon' ||
-    normalized.includes('example.com') ||
-    normalized === 'coming-soon'
-  )
-}
 
 const Pricing = () => {
   const { user } = useAuthStore()
   const [planTier, setPlanTier] = useState('free')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [inviteCode, setInviteCode] = useState('')
+  const [redeeming, setRedeeming] = useState(false)
+  const [notice, setNotice] = useState(null)
 
   useEffect(() => {
     const loadPlan = async () => {
@@ -49,15 +40,38 @@ const Pricing = () => {
   }, [user?.id])
 
   const isPro = useMemo(() => planTier === 'pro', [planTier])
-  const hasValidCheckoutUrl = !isPlaceholderCheckoutUrl(CHECKOUT_URL)
-  const canUpgrade = !isPro && hasValidCheckoutUrl
 
-  const handleUpgrade = () => {
-    if (!hasValidCheckoutUrl) {
-      setError('Checkout is coming soon. Set a valid VITE_LEMON_SQUEEZY_CHECKOUT_URL to enable upgrades.')
+  const handleRedeem = async () => {
+    const trimmed = inviteCode.trim()
+    if (!trimmed) {
+      setError('Please enter an invite code.')
       return
     }
-    window.open(CHECKOUT_URL, '_blank', 'noopener,noreferrer')
+
+    setError(null)
+    setNotice(null)
+    setRedeeming(true)
+    try {
+      const { data, error: rpcError } = await supabase.rpc('redeem_invite_code', {
+        input_code: trimmed,
+      })
+      if (rpcError) throw rpcError
+
+      const result = Array.isArray(data) ? data[0] : null
+      if (!result?.ok) {
+        setError(result?.message || 'Failed to redeem invite code.')
+        return
+      }
+
+      setPlanTier('pro')
+      setNotice(result.message || 'Invite code redeemed successfully.')
+      setInviteCode('')
+    } catch (err) {
+      console.error('Invite code redeem error:', err)
+      setError('Failed to redeem invite code.')
+    } finally {
+      setRedeeming(false)
+    }
   }
 
   if (loading) {
@@ -86,6 +100,12 @@ const Pricing = () => {
           <span>{error}</span>
         </div>
       )}
+      {notice && (
+        <div className="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+          <CheckCircle2 size={16} />
+          <span>{notice}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white border border-slate-200 rounded-2xl p-6">
@@ -107,14 +127,36 @@ const Pricing = () => {
             <li className="flex items-center gap-2"><CheckCircle2 size={14} /> AI plan generation</li>
             <li className="flex items-center gap-2"><CheckCircle2 size={14} /> Export features (planned)</li>
           </ul>
-          <button
-            onClick={handleUpgrade}
-            disabled={!canUpgrade}
-            className="w-full px-4 py-3 rounded-xl font-bold bg-indigo-500 hover:bg-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {isPro ? 'You are on Pro' : 'Upgrade to Pro'}
-            {!isPro && <ExternalLink size={16} />}
-          </button>
+          {isPro ? (
+            <div className="w-full px-4 py-3 rounded-xl font-bold bg-emerald-600 text-center">
+              You are on Pro
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <label className="text-xs uppercase tracking-wider text-indigo-200 font-bold block">
+                Invite Code
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value)}
+                  placeholder="Enter your invite code"
+                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                />
+                <button
+                  onClick={handleRedeem}
+                  disabled={redeeming}
+                  className="px-4 py-2 rounded-xl font-bold bg-indigo-500 hover:bg-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {redeeming ? <Loader2 size={16} className="animate-spin" /> : <KeyRound size={16} />}
+                  Redeem
+                </button>
+              </div>
+              <p className="text-xs text-slate-300">
+                Pro access is currently invite-only. Contact the founder to get a code.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

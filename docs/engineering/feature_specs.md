@@ -10,7 +10,7 @@
  - **How it works**: Lists all projects saved by the authenticated user in Supabase. 
 
 ## 4. Pricing & Billing Entry
-- **How it works**: A protected `/pricing` page reads `profiles.plan_tier` and provides a Lemon Squeezy checkout entry point for Free users.
+- **How it works**: A protected `/pricing` page reads `profiles.plan_tier` and provides invite-code redemption (`redeem_invite_code`) for Free users to access Pro during promotion.
 
 ## 5. Project Export
 - **How it works**: In Project Editor, users can export the current project as JSON or Markdown via client-side file generation.

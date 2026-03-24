@@ -17,7 +17,7 @@ This index provides a high-level map of the documentation system for the AI Proj
 - [data_sync.md](file:///d:/QS%20Personal/ai-project-planner-dev/docs/specs/data_sync.md): Current data persistence behavior (manual save with insert/update), plus documented future improvements for conflict resolution.
 - [export.md](file:///d:/QS%20Personal/ai-project-planner-dev/docs/specs/export.md): Project export behavior in the editor (current MVP supports JSON and Markdown downloads).
 - [project_crud.md](file:///d:/QS%20Personal/ai-project-planner-dev/docs/specs/project_crud.md): Project creation, loading, saving, and deletion behavior at the feature level.
-- [pricing_billing.md](file:///d:/QS%20Personal/ai-project-planner-dev/docs/specs/pricing_billing.md): Pricing page behavior, current plan display, and Lemon Squeezy checkout entry for upgrades.
+- [pricing_billing.md](file:///d:/QS%20Personal/ai-project-planner-dev/docs/specs/pricing_billing.md): Pricing page behavior, current plan display, and invite-code redemption flow for Pro access during promotion.
 - [task_crud.md](file:///d:/QS%20Personal/ai-project-planner-dev/docs/specs/task_crud.md): Task creation and editing behavior, including current non-enforcement of dependency scheduling logic.
 - [user_auth.md](file:///d:/QS%20Personal/ai-project-planner-dev/docs/specs/user_auth.md): Authentication and session behavior from the user’s perspective, aligned to the current `/auth` flow.
 - [user_center.md](file:///d:/QS%20Personal/ai-project-planner-dev/docs/specs/user_center.md): Planned User Center feature specification; currently not accessible in the UI navigation.
