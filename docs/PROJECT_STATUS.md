@@ -75,12 +75,12 @@ Evidence:
 
 ### Pro Gating for AI Generation (Interim enforced)
 - Strategy states AI generation is Pro-only.
-- Current server implementation gates `/api/generate-plan` by bearer auth + `PRO_USER_EMAILS` allowlist.
-- This is an interim Pro-gate implementation and not yet subscription-system driven.
+- Current server implementation gates `/api/generate-plan` by bearer auth + `profiles.plan_tier`.
+- Users must have `plan_tier = 'pro'` to access AI generation.
 
 Evidence:
 - Strategy: `docs/strategy/PRODUCT_SCOPE.md` (AI generation not included in Free tier).
-- Code: `api/generate-plan.js` validates auth token and checks `PRO_USER_EMAILS`.
+- Code: `api/generate-plan.js` validates auth token and checks `profiles.plan_tier`.
 
 ## Not Yet Implemented
 Referenced in strategy/roadmap but not present in current implementation:

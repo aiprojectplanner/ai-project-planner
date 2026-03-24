@@ -42,13 +42,6 @@ async function callOpenRouter({ apiKey, model, prompt }) {
   return { response, data }
 }
 
-function parseProEmails() {
-  return (process.env.PRO_USER_EMAILS || '')
-    .split(',')
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean)
-}
-
 async function authenticateAndAuthorizeProUser(req) {
   const authHeader = req.headers?.authorization || req.headers?.Authorization || ''
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : ''
@@ -76,20 +69,28 @@ async function authenticateAndAuthorizeProUser(req) {
     return { ok: false, status: 401, body: { error: 'Unauthorized', message: 'Invalid or expired token.' } }
   }
 
-  const proEmails = parseProEmails()
-  if (proEmails.length === 0) {
+  const profileClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  })
+  const { data: profile, error: profileError } = await profileClient
+    .from('profiles')
+    .select('plan_tier')
+    .eq('id', user.id)
+    .single()
+
+  if (profileError || !profile) {
     return {
       ok: false,
-      status: 500,
-      body: {
-        error: 'Server Configuration Error',
-        message: 'PRO_USER_EMAILS is not configured.',
-      },
+      status: 403,
+      body: { error: 'Pro Plan Required', message: 'Plan profile not found for current user.' },
     }
   }
 
-  const email = (user.email || '').toLowerCase()
-  if (!proEmails.includes(email)) {
+  if (profile.plan_tier !== 'pro') {
     return {
       ok: false,
       status: 403,
@@ -97,7 +98,7 @@ async function authenticateAndAuthorizeProUser(req) {
     }
   }
 
-  return { ok: true, user }
+  return { ok: true, user, profile }
 }
 
 export default async function handler(req, res) {

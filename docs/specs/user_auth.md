@@ -21,6 +21,7 @@
  
  ## Database Tables 
  - `auth.users` (Internal Supabase table) 
+- `profiles` (public user profile row with plan tier)
  
  ## Expected Output 
  - JWT session token stored in browser via Supabase client. 

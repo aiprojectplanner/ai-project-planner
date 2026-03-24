@@ -26,7 +26,7 @@
 - **Access gate (server-side)**:
    - Requires a valid Supabase access token in `Authorization: Bearer <token>`.
    - Validates token via Supabase Auth.
-   - Allows AI generation only for users whose email is listed in `PRO_USER_EMAILS` (comma-separated env allowlist).
+   - Reads current user's `profiles.plan_tier` and allows AI generation only when `plan_tier = 'pro'`.
 - **Frontend**: Sends bearer token, uses the JSON body as the plan, and updates the `projectStore` (see `AIPlanner.jsx`). 
  
  ## Database Tables 
@@ -43,4 +43,4 @@
 - **All models failed**: HTTP `502` with `All configured models failed or returned unusable output` (includes `lastAttempt` for debugging). 
 - **Invalid JSON / empty content**: The server may try the next configured model; if all models fail extraction or parsing, the request ends with the `502` above. 
 - **Unauthorized**: HTTP `401` when auth token is missing/invalid. 
-- **Pro required**: HTTP `403` when user is authenticated but not in `PRO_USER_EMAILS`. 
+- **Pro required**: HTTP `403` when user is authenticated but `profiles.plan_tier` is not `pro` (or profile is missing). 
