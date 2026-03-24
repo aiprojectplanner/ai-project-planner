@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react'
-import { ArrowLeft, Plus, Save, Trash2, Loader2, CheckCircle, Download } from 'lucide-react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { ArrowLeft, Plus, Save, Trash2, Loader2, CheckCircle, Download, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useProjectStore from '../store/projectStore'
 import useAuthStore from '../store/authStore'
@@ -9,6 +9,9 @@ const ProjectEditor = () => {
   const { user } = useAuthStore()
   const [isSaving, setIsSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState(null) // 'success' | 'error' | null
+  const [leftPanelWidth, setLeftPanelWidth] = useState(650)
+  const [isTaskPanelCollapsed, setIsTaskPanelCollapsed] = useState(false)
+  const resizeStateRef = useRef({ active: false })
 
   const { 
     projectTitle, 
@@ -30,8 +33,22 @@ const ProjectEditor = () => {
     return diff > 0 ? diff : 0
   }
 
+  const timelineMeta = useMemo(() => {
+    const taskStarts = tasks.map((t) => new Date(t.start))
+    const taskEnds = tasks.map((t) => new Date(t.end))
+    const startCandidates = [new Date(projectStartDate), ...taskStarts]
+    const endCandidates = [new Date(projectEndDate), ...taskEnds]
+    const minStart = new Date(Math.min(...startCandidates.map((d) => d.getTime())))
+    const maxEnd = new Date(Math.max(...endCandidates.map((d) => d.getTime())))
+    const spanDaysRaw = Math.ceil((maxEnd - minStart) / (1000 * 60 * 60 * 24))
+    const spanDays = Math.max(7, spanDaysRaw)
+    const weeks = Math.max(1, Math.ceil(spanDays / 7))
+
+    return { minStart, spanDays, weeks }
+  }, [projectStartDate, projectEndDate, tasks])
+
   const timelineHeaders = useMemo(() => {
-    return Array.from({ length: 4 }).map((_, i) => (
+    return Array.from({ length: timelineMeta.weeks }).map((_, i) => (
       <div 
         key={i} 
         className="flex-1 border-r border-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400 uppercase tracking-widest"
@@ -39,13 +56,36 @@ const ProjectEditor = () => {
         Week {i + 1}
       </div>
     ))
-  }, [])
+  }, [timelineMeta.weeks])
 
   const gridLines = useMemo(() => {
-    return Array.from({ length: 4 }).map((_, i) => (
+    return Array.from({ length: timelineMeta.weeks }).map((_, i) => (
       <div key={i} className="flex-1 border-r border-slate-50" />
     ))
-  }, [])
+  }, [timelineMeta.weeks])
+
+  useEffect(() => {
+    const onMouseMove = (e) => {
+      if (!resizeStateRef.current.active || isTaskPanelCollapsed) return
+      const next = Math.min(860, Math.max(420, e.clientX))
+      setLeftPanelWidth(next)
+    }
+    const onMouseUp = () => {
+      resizeStateRef.current.active = false
+    }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [isTaskPanelCollapsed])
+
+  const startResizing = (e) => {
+    e.preventDefault()
+    resizeStateRef.current.active = true
+  }
 
   const handleSave = async () => {
     if (!user) return
@@ -173,7 +213,11 @@ const ProjectEditor = () => {
       {/* Main Workspace */}
       <main className="flex-1 flex overflow-hidden">
         {/* Left: Task Table */}
-        <div className="w-[650px] bg-white border-r border-slate-200 flex flex-col shrink-0 overflow-y-auto">
+        {!isTaskPanelCollapsed && (
+          <div
+            className="bg-white border-r border-slate-200 flex flex-col shrink-0 overflow-y-auto"
+            style={{ width: `${leftPanelWidth}px` }}
+          >
           <table className="w-full text-left border-collapse table-fixed">
             <thead className="bg-slate-50 sticky top-0 z-10 border-b border-slate-200">
               <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -240,9 +284,28 @@ const ProjectEditor = () => {
             </tbody>
           </table>
         </div>
+        )}
+
+        {/* Resize / Collapse Controls */}
+        <div className="w-4 shrink-0 bg-slate-50 border-r border-slate-200 flex flex-col items-center py-2 gap-3">
+          <button
+            onClick={() => setIsTaskPanelCollapsed((v) => !v)}
+            className="p-1 rounded hover:bg-slate-200 text-slate-500"
+            title={isTaskPanelCollapsed ? 'Expand task panel' : 'Collapse task panel'}
+          >
+            {isTaskPanelCollapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
+          </button>
+          {!isTaskPanelCollapsed && (
+            <button
+              onMouseDown={startResizing}
+              className="w-2 h-16 rounded bg-slate-300 hover:bg-slate-400 cursor-col-resize"
+              title="Drag to resize task panel"
+            />
+          )}
+        </div>
 
         {/* Right: Gantt Visualization */}
-        <div className="flex-1 bg-white overflow-x-auto relative min-w-[800px]">
+        <div className="flex-1 bg-white overflow-hidden relative">
           {/* Timeline Header */}
           <div className="h-10 bg-slate-50 border-b border-slate-200 flex sticky top-0 z-10">
             {timelineHeaders}
@@ -256,20 +319,19 @@ const ProjectEditor = () => {
             </div>
             {/* Bars */}
             <div className="relative">
-              {tasks.map((task, index) => {
+              {tasks.map((task) => {
                 const dur = calculateDuration(task.start, task.end)
-                const startOffset = calculateDuration(projectStartDate, task.start)
-                const leftPercent = (startOffset / totalDays) * 100
-                const widthPercent = (dur / totalDays) * 100
+                const startOffset = Math.max(
+                  0,
+                  Math.ceil((new Date(task.start) - timelineMeta.minStart) / (1000 * 60 * 60 * 24))
+                )
+                const leftPercent = (startOffset / timelineMeta.spanDays) * 100
+                const widthPercent = (dur / timelineMeta.spanDays) * 100
 
                 return (
                   <div key={task.id} className="h-10 border-b border-slate-50 relative">
                     <div 
-                      className={`h-6 rounded-lg absolute top-2 transition-all duration-300 shadow-lg ${
-                        index % 2 === 0 
-                        ? 'bg-indigo-500 shadow-indigo-100' 
-                        : 'bg-emerald-500 shadow-emerald-100'
-                      }`}
+                      className="h-6 rounded-lg absolute top-2 transition-all duration-300 shadow-lg bg-indigo-500 shadow-indigo-100"
                       style={{ 
                         left: `${leftPercent}%`, 
                         width: `${widthPercent}%` 
