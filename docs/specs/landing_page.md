@@ -24,10 +24,13 @@ Provide a public-facing entry page that communicates value quickly and drives vi
 - "Try it free" and "Start planning" trigger route navigation to `/auth`.
 - Demo section supports "Play demo" and "Reset demo" interactions.
 - Demo section supports multiple scenarios via tabs (SaaS / E-commerce / Growth). Playback applies to the currently selected scenario.
+- Demo section provides a "Copy input" action to let visitors quickly reuse scenario prompts.
+- CTA section includes a secondary action ("View demos") for lower-friction exploration before sign-up.
 
 ## Expected Output
 - Public route `/` renders the full landing page for non-authenticated users.
 - Authenticated users visiting `/` are redirected to `/dashboard`.
+- Hero includes social-proof style supporting text for trust building.
 
 ## Error Cases
 - Section anchor not found: ignore action safely.

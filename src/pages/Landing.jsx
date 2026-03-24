@@ -33,6 +33,7 @@ const Landing = () => {
   const [showSolutionOutput, setShowSolutionOutput] = useState(false)
   const [demoStep, setDemoStep] = useState(0)
   const [activeDemoKey, setActiveDemoKey] = useState('saas')
+  const [copyNotice, setCopyNotice] = useState(false)
 
   const solutionItems = useMemo(() => ['task list', 'timeline', 'milestones', 'roadmap'], [])
   const activeDemo = useMemo(
@@ -66,6 +67,16 @@ const Landing = () => {
     setDemoStep(0)
   }
 
+  const copyDemoInput = async () => {
+    try {
+      await navigator.clipboard.writeText(activeDemo.input)
+      setCopyNotice(true)
+      setTimeout(() => setCopyNotice(false), 1500)
+    } catch (_err) {
+      setCopyNotice(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-slate-200">
@@ -95,6 +106,9 @@ const Landing = () => {
           </h1>
           <p className="text-lg text-slate-600 mb-8">
             Generate tasks, timelines, and milestones automatically using AI.
+          </p>
+          <p className="text-sm font-semibold text-slate-500 mb-6">
+            Trusted by early builders to go from idea to executable roadmap faster.
           </p>
           <button
             onClick={() => navigate('/auth')}
@@ -189,6 +203,9 @@ const Landing = () => {
             <div className="mt-4 flex gap-3">
               <button onClick={playDemo} className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold">Play demo</button>
               <button onClick={resetDemo} className="px-4 py-2 rounded-xl bg-white border border-slate-300 font-bold">Reset demo</button>
+              <button onClick={copyDemoInput} className="px-4 py-2 rounded-xl bg-white border border-slate-300 font-bold">
+                {copyNotice ? 'Copied' : 'Copy input'}
+              </button>
             </div>
           </div>
           <div className="bg-white border border-slate-200 rounded-2xl p-6">
@@ -218,12 +235,20 @@ const Landing = () => {
       <section id="cta" className="max-w-6xl mx-auto px-6 py-20">
         <div className="rounded-3xl bg-slate-900 text-white p-12 text-center">
           <h2 className="text-4xl font-black mb-4">Try AI Project Planner</h2>
-          <button
-            onClick={() => navigate('/auth')}
-            className="px-8 py-3 rounded-2xl bg-indigo-500 hover:bg-indigo-400 font-bold"
-          >
-            Start planning
-          </button>
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
+            <button
+              onClick={() => navigate('/auth')}
+              className="px-8 py-3 rounded-2xl bg-indigo-500 hover:bg-indigo-400 font-bold"
+            >
+              Start planning
+            </button>
+            <button
+              onClick={() => scrollToSection('demo')}
+              className="px-8 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 font-bold"
+            >
+              View demos
+            </button>
+          </div>
         </div>
       </section>
     </div>
