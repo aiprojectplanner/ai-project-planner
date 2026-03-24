@@ -166,7 +166,7 @@ const ProjectEditor = () => {
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <button 
-            onClick={() => navigate('/')} 
+            onClick={() => navigate('/dashboard')} 
             className="text-slate-400 hover:text-slate-600 transition-all p-2 hover:bg-slate-50 rounded-lg"
           >
             <ArrowLeft size={20} />

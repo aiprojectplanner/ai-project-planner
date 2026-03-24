@@ -125,7 +125,7 @@ const AIPlanner = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button 
                   type="button"
-                  onClick={() => navigate('/')} 
+                  onClick={() => navigate('/dashboard')} 
                   className="px-8 py-4 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
                   disabled={loading}
                 >

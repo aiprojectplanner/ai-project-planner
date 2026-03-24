@@ -5,6 +5,7 @@ import { LayoutDashboard, GanttChart, Wand2, BarChart, Bell, Brain, LogOut, Load
 import Dashboard from './pages/Dashboard'
 import ProjectEditor from './pages/ProjectEditor'
 import AIPlanner from './pages/AIPlanner'
+import Landing from './pages/Landing'
 import Pricing from './pages/Pricing'
 import Auth from './pages/Auth'
 import useAuthStore from './store/authStore'
@@ -34,6 +35,7 @@ const PageHeader = () => {
   const getPageTitle = () => {
     switch(location.pathname) {
       case '/': return 'Dashboard'
+      case '/dashboard': return 'Dashboard'
       case '/editor': return 'Project Editor'
       case '/ai-planner': return 'AI Planner'
       case '/pricing': return 'Pricing'
@@ -42,7 +44,8 @@ const PageHeader = () => {
   }
 
   // Only show the standard header for Dashboard and AI Planner (Editor has its own header)
-  if (location.pathname === '/editor' || location.pathname === '/auth') return null
+  const { user } = useAuthStore()
+  if (!user || location.pathname === '/editor' || location.pathname === '/auth') return null
 
   return (
     <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 z-10">
@@ -84,7 +87,7 @@ const App = () => {
           </div>
 
           <nav className="flex-1 px-4 py-6 space-y-1">
-            <NavLink to="/" className={({ isActive }) => `nav-item group ${isActive ? 'active' : ''}`}>
+            <NavLink to="/dashboard" className={({ isActive }) => `nav-item group ${isActive ? 'active' : ''}`}>
               <LayoutDashboard size={20} className="text-slate-500 group-[.active]:text-indigo-400" />
               <span className="font-medium text-sm">Dashboard</span>
             </NavLink>
@@ -127,7 +130,8 @@ const App = () => {
           <div className="flex-1 overflow-auto">
             <Routes>
               <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Landing />} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/editor" element={<ProtectedRoute><ProjectEditor /></ProtectedRoute>} />
               <Route path="/ai-planner" element={<ProtectedRoute><AIPlanner /></ProtectedRoute>} />
               <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />

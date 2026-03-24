@@ -7,6 +7,16 @@ MVP (early testing). Core flows (auth, dashboard, manual editor, AI generation) 
 
 ## Implemented Features
 
+### Public Landing Page
+- Unauthenticated users see a public marketing landing page at `/`.
+- Landing includes 5 sections: Hero, Problem, Solution, Demo, CTA.
+- CTA buttons route users to `/auth` for sign-in/sign-up.
+- Authenticated users visiting `/` are redirected to `/dashboard`.
+
+Code references:
+- `src/pages/Landing.jsx`
+- `src/App.jsx`
+
 ### Authentication
 - Supabase Auth sign-in/sign-up via the unified `/auth` page.
 - Session stored and synchronized into a Zustand store (`authStore`) with route protection.
@@ -17,6 +27,7 @@ Code references:
 - `src/App.jsx`
 
 ### Dashboard
+- Main authenticated dashboard route is `/dashboard`.
 - Lists user projects from Supabase.
 - Sorts by `created_at` DESC.
 - Supports project deletion from the dashboard.

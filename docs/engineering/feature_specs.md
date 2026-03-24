@@ -1,5 +1,8 @@
 # Feature Specifications 
  
+## 0. Public Landing Page
+- **How it works**: Non-authenticated visitors see a 5-section landing page at `/` (Hero, Problem, Solution, Demo, CTA) with interactive demo playback and auth CTA buttons.
+
 ## 1. AI Project Generator 
 - **How it works**: Users enter an idea, the frontend sends it to `/api/generate-plan`, which calls OpenRouter with one or more LLMs (priority list from `OPENROUTER_MODELS` / `OPENROUTER_MODEL`), receives JSON, and the editor renders a Gantt chart. 
  
