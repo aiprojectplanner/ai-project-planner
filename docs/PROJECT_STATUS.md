@@ -20,6 +20,7 @@ Code references:
 - Lists user projects from Supabase.
 - Sorts by `created_at` DESC.
 - Supports project deletion from the dashboard.
+- Supports inline project rename from dashboard cards.
 - Displays Free plan usage indicator in the UI.
 
 Code references:
@@ -29,6 +30,7 @@ Code references:
 - Create project (insert) and update project (update) to Supabase `projects`.
 - Load a selected project into the editor store.
 - Delete a project from the dashboard list (implemented in UI).
+- Rename project title from dashboard card (update by id).
 
 Code references:
 - `src/store/projectStore.js`
@@ -45,6 +47,13 @@ Code references:
 ### Timeline / Gantt
 - Renders a simple week-based header and task bars based on task start/end dates.
 - Uses a custom lightweight Gantt visualization rather than an external library.
+
+Code references:
+- `src/pages/ProjectEditor.jsx`
+
+### Export
+- Project Editor supports client-side export for JSON and Markdown.
+- Export is generated from current editor state and downloaded via browser blob URL.
 
 Code references:
 - `src/pages/ProjectEditor.jsx`
@@ -95,11 +104,10 @@ Evidence:
 ## Not Yet Implemented
 Referenced in strategy/roadmap but not present in current implementation:
 - Subscription integration webhook sync (Lemon Squeezy -> `profiles.plan_tier`).
-- Export formats (PDF/Excel/Markdown/Image).
+- Export formats (PDF/Excel/Image).
 - Multi-language (i18n).
 - Task dependencies and automated timeline shifting.
 - AI optimization features (risk analysis, resource estimator).
-- Project renaming from Dashboard.
 
 References:
 - `docs/strategy/PRODUCT_SCOPE.md`

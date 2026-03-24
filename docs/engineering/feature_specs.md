@@ -11,3 +11,6 @@
 
 ## 4. Pricing & Billing Entry
 - **How it works**: A protected `/pricing` page reads `profiles.plan_tier` and provides a Lemon Squeezy checkout entry point for Free users.
+
+## 5. Project Export
+- **How it works**: In Project Editor, users can export the current project as JSON or Markdown via client-side file generation.

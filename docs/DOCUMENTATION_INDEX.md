@@ -15,6 +15,7 @@ This index provides a high-level map of the documentation system for the AI Proj
 - [ai_planner.md](file:///d:/QS%20Personal/ai-project-planner-dev/docs/specs/ai_planner.md): AI planning feature behavior, including request/response expectations and the plan import flow into the editor.
 - [dashboard_view.md](file:///d:/QS%20Personal/ai-project-planner-dev/docs/specs/dashboard_view.md): Dashboard behavior, including project listing, sorting, and user-visible actions.
 - [data_sync.md](file:///d:/QS%20Personal/ai-project-planner-dev/docs/specs/data_sync.md): Current data persistence behavior (manual save with insert/update), plus documented future improvements for conflict resolution.
+- [export.md](file:///d:/QS%20Personal/ai-project-planner-dev/docs/specs/export.md): Project export behavior in the editor (current MVP supports JSON and Markdown downloads).
 - [project_crud.md](file:///d:/QS%20Personal/ai-project-planner-dev/docs/specs/project_crud.md): Project creation, loading, saving, and deletion behavior at the feature level.
 - [pricing_billing.md](file:///d:/QS%20Personal/ai-project-planner-dev/docs/specs/pricing_billing.md): Pricing page behavior, current plan display, and Lemon Squeezy checkout entry for upgrades.
 - [task_crud.md](file:///d:/QS%20Personal/ai-project-planner-dev/docs/specs/task_crud.md): Task creation and editing behavior, including current non-enforcement of dependency scheduling logic.

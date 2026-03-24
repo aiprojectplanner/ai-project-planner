@@ -5,7 +5,7 @@
  
  ## User Flow 
  1. User creates a project via Dashboard (AI or Manual). 
- 2. User renames project in the Editor. 
+2. User renames project in the Editor or directly in Dashboard cards. 
  3. User deletes a project from the Dashboard list. 
  
  ## Inputs 

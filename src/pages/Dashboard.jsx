@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Plus, Brain, Clock, CheckCircle2, Loader2, Trash2 } from 'lucide-react'
+import { Plus, Brain, Clock, CheckCircle2, Loader2, Trash2, Pencil, Check, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import useAuthStore from '../store/authStore'
@@ -11,6 +11,8 @@ const Dashboard = () => {
   const { loadProject } = useProjectStore()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
+  const [editingProjectId, setEditingProjectId] = useState(null)
+  const [editingTitle, setEditingTitle] = useState('')
 
   const maxProjects = 3
 
@@ -66,6 +68,45 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error deleting project:', error)
       alert('Failed to delete project')
+    }
+  }
+
+  const startRename = (e, project) => {
+    e.stopPropagation()
+    setEditingProjectId(project.id)
+    setEditingTitle(project.title || '')
+  }
+
+  const cancelRename = (e) => {
+    e.stopPropagation()
+    setEditingProjectId(null)
+    setEditingTitle('')
+  }
+
+  const submitRename = async (e, projectId) => {
+    e.stopPropagation()
+    const nextTitle = editingTitle.trim()
+    if (!nextTitle) {
+      alert('Project title cannot be empty.')
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ title: nextTitle, updated_at: new Date().toISOString() })
+        .eq('id', projectId)
+
+      if (error) throw error
+
+      setProjects((prev) =>
+        prev.map((p) => (p.id === projectId ? { ...p, title: nextTitle } : p))
+      )
+      setEditingProjectId(null)
+      setEditingTitle('')
+    } catch (error) {
+      console.error('Error renaming project:', error)
+      alert('Failed to rename project')
     }
   }
 
@@ -133,11 +174,51 @@ const Dashboard = () => {
                 >
                   <Trash2 size={16} />
                 </button>
+                {editingProjectId !== project.id && (
+                  <button
+                    onClick={(e) => startRename(e, project)}
+                    className="absolute top-6 right-16 p-2 text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                    title="Rename"
+                  >
+                    <Pencil size={16} />
+                  </button>
+                )}
 
                 <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mb-6 text-sm font-black border border-indigo-100 group-hover:bg-indigo-500 group-hover:text-white transition-all shrink-0 uppercase">
                   {project.title.substring(0, 2)}
                 </div>
-                <h3 className="font-black text-slate-900 text-lg mb-2 truncate pr-8">{project.title}</h3>
+                {editingProjectId === project.id ? (
+                  <div className="mb-2 pr-8" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-2">
+                      <input
+                        autoFocus
+                        value={editingTitle}
+                        onChange={(e) => setEditingTitle(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') submitRename(e, project.id)
+                          if (e.key === 'Escape') cancelRename(e)
+                        }}
+                        className="w-full text-sm font-bold text-slate-800 border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                      />
+                      <button
+                        onClick={(e) => submitRename(e, project.id)}
+                        className="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-50"
+                        title="Save"
+                      >
+                        <Check size={14} />
+                      </button>
+                      <button
+                        onClick={cancelRename}
+                        className="p-1.5 rounded-md text-slate-500 hover:bg-slate-100"
+                        title="Cancel"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <h3 className="font-black text-slate-900 text-lg mb-2 truncate pr-8">{project.title}</h3>
+                )}
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
                   <Clock size={10} /> {new Date(project.created_at).toLocaleDateString()}
                 </p>

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { ArrowLeft, Plus, Save, Trash2, Loader2, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Plus, Save, Trash2, Loader2, CheckCircle, Download } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useProjectStore from '../store/projectStore'
 import useAuthStore from '../store/authStore'
@@ -13,6 +13,7 @@ const ProjectEditor = () => {
   const { 
     projectTitle, 
     projectStartDate, 
+    projectEndDate,
     totalDays, 
     tasks, 
     setProjectTitle, 
@@ -63,6 +64,54 @@ const ProjectEditor = () => {
     }
   }
 
+  const makeSafeFilename = (value, fallback) => {
+    const base = (value || '').trim() || fallback
+    return base.replace(/[^\w.-]+/g, '_')
+  }
+
+  const downloadTextFile = (filename, content, mimeType) => {
+    const blob = new Blob([content], { type: mimeType })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const exportJson = () => {
+    const payload = {
+      projectTitle,
+      projectStartDate,
+      projectEndDate,
+      totalDays,
+      tasks
+    }
+    const filename = `${makeSafeFilename(projectTitle, 'project')}.json`
+    downloadTextFile(filename, JSON.stringify(payload, null, 2), 'application/json;charset=utf-8')
+  }
+
+  const exportMarkdown = () => {
+    const lines = [
+      `# ${projectTitle || 'Project'}`,
+      '',
+      `- Start Date: ${projectStartDate}`,
+      `- End Date: ${projectEndDate}`,
+      `- Total Days: ${totalDays}`,
+      '',
+      '## Tasks',
+      '',
+      '| # | Task | Start | End | Duration (days) | Dependency |',
+      '|---|------|-------|-----|------------------|------------|',
+      ...tasks.map((task, idx) => {
+        const duration = calculateDuration(task.start, task.end)
+        return `| ${idx + 1} | ${task.name} | ${task.start} | ${task.end} | ${duration} | ${task.dep || '-'} |`
+      })
+    ]
+    const filename = `${makeSafeFilename(projectTitle, 'project')}.md`
+    downloadTextFile(filename, lines.join('\n'), 'text/markdown;charset=utf-8')
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       {/* Editor Header */}
@@ -97,6 +146,18 @@ const ProjectEditor = () => {
             className="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all flex items-center gap-2"
           >
             <Plus size={18} /> Add Task
+          </button>
+          <button
+            onClick={exportJson}
+            className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all flex items-center gap-2"
+          >
+            <Download size={16} /> Export JSON
+          </button>
+          <button
+            onClick={exportMarkdown}
+            className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all flex items-center gap-2"
+          >
+            <Download size={16} /> Export MD
           </button>
           <button 
             onClick={handleSave}
