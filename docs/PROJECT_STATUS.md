@@ -61,6 +61,16 @@ Code references:
 - `api/generate-plan.js`
 - `src/store/projectStore.js`
 
+### Pricing
+- Protected `/pricing` route is available in the sidebar.
+- Page reads `profiles.plan_tier` and displays current plan (Free/Pro).
+- Free users can start upgrade flow via `VITE_LEMON_SQUEEZY_CHECKOUT_URL`.
+- Checkout completion and subscription webhook sync are not implemented yet.
+
+Code references:
+- `src/pages/Pricing.jsx`
+- `src/App.jsx`
+
 ## Partially Implemented
 
 ### Free Plan Limits (UI + persistence boundary)
@@ -84,7 +94,7 @@ Evidence:
 
 ## Not Yet Implemented
 Referenced in strategy/roadmap but not present in current implementation:
-- Subscription integration (Lemon Squeezy).
+- Subscription integration webhook sync (Lemon Squeezy -> `profiles.plan_tier`).
 - Export formats (PDF/Excel/Markdown/Image).
 - Multi-language (i18n).
 - Task dependencies and automated timeline shifting.

@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom'
-import { LayoutDashboard, GanttChart, Wand2, BarChart, Bell, Brain, LogOut, Loader2 } from 'lucide-react'
+import { LayoutDashboard, GanttChart, Wand2, BarChart, Bell, Brain, LogOut, Loader2, CreditCard } from 'lucide-react'
 
 import Dashboard from './pages/Dashboard'
 import ProjectEditor from './pages/ProjectEditor'
 import AIPlanner from './pages/AIPlanner'
+import Pricing from './pages/Pricing'
 import Auth from './pages/Auth'
 import useAuthStore from './store/authStore'
 
@@ -35,6 +36,7 @@ const PageHeader = () => {
       case '/': return 'Dashboard'
       case '/editor': return 'Project Editor'
       case '/ai-planner': return 'AI Planner'
+      case '/pricing': return 'Pricing'
       default: return 'Dashboard'
     }
   }
@@ -94,6 +96,10 @@ const App = () => {
               <Wand2 size={20} className="text-slate-500 group-[.active]:text-indigo-400" />
               <span className="font-medium text-sm">AI Planner</span>
             </NavLink>
+            <NavLink to="/pricing" className={({ isActive }) => `nav-item group ${isActive ? 'active' : ''}`}>
+              <CreditCard size={20} className="text-slate-500 group-[.active]:text-indigo-400" />
+              <span className="font-medium text-sm">Pricing</span>
+            </NavLink>
             <div className="nav-item opacity-50 cursor-not-allowed">
               <BarChart size={20} className="text-slate-500" />
               <span className="font-medium text-sm">Analytics</span>
@@ -124,6 +130,7 @@ const App = () => {
               <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/editor" element={<ProtectedRoute><ProjectEditor /></ProtectedRoute>} />
               <Route path="/ai-planner" element={<ProtectedRoute><AIPlanner /></ProtectedRoute>} />
+              <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
             </Routes>
           </div>
         </main>

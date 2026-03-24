@@ -8,3 +8,6 @@
  
  ## 3. Dashboard 
  - **How it works**: Lists all projects saved by the authenticated user in Supabase. 
+
+## 4. Pricing & Billing Entry
+- **How it works**: A protected `/pricing` page reads `profiles.plan_tier` and provides a Lemon Squeezy checkout entry point for Free users.
