@@ -23,6 +23,7 @@ Provide a public-facing entry page that communicates value quickly and drives vi
 - Top navigation anchors scroll to sections.
 - "Try it free" and "Start planning" trigger route navigation to `/auth`.
 - Demo section supports "Play demo" and "Reset demo" interactions.
+- Demo section supports multiple scenarios via tabs (SaaS / E-commerce / Growth). Playback applies to the currently selected scenario.
 
 ## Expected Output
 - Public route `/` renders the full landing page for non-authenticated users.

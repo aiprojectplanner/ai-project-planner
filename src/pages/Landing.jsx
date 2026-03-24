@@ -1,12 +1,44 @@
 import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+const DEMOS = [
+  {
+    key: 'saas',
+    label: 'SaaS',
+    title: 'AI SaaS Launch',
+    input: 'build AI project planner SaaS',
+    phase1: ['market research', 'define MVP', 'design architecture'],
+    phase2: ['backend development', 'frontend implementation', 'testing'],
+  },
+  {
+    key: 'ecom',
+    label: 'E-commerce',
+    title: 'DTC Brand Launch',
+    input: 'launch a DTC skincare brand online',
+    phase1: ['customer research', 'product positioning', 'supplier shortlist'],
+    phase2: ['brand design', 'Shopify setup', 'content production'],
+  },
+  {
+    key: 'growth',
+    label: 'Growth',
+    title: 'TikTok Growth Plan',
+    input: 'grow a TikTok account to 10k followers in 3 months',
+    phase1: ['niche selection', 'content pillars', 'posting workflow'],
+    phase2: ['daily publishing', 'hook optimization', 'hashtag testing'],
+  },
+]
+
 const Landing = () => {
   const navigate = useNavigate()
   const [showSolutionOutput, setShowSolutionOutput] = useState(false)
   const [demoStep, setDemoStep] = useState(0)
+  const [activeDemoKey, setActiveDemoKey] = useState('saas')
 
   const solutionItems = useMemo(() => ['task list', 'timeline', 'milestones', 'roadmap'], [])
+  const activeDemo = useMemo(
+    () => DEMOS.find((d) => d.key === activeDemoKey) || DEMOS[0],
+    [activeDemoKey]
+  )
 
   const scrollToSection = (id) => {
     const el = document.getElementById(id)
@@ -29,6 +61,10 @@ const Landing = () => {
   }
 
   const resetDemo = () => setDemoStep(0)
+  const switchDemo = (nextKey) => {
+    setActiveDemoKey(nextKey)
+    setDemoStep(0)
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -130,10 +166,26 @@ const Landing = () => {
 
       <section id="demo" className="max-w-6xl mx-auto px-6 py-16">
         <h2 className="text-3xl font-black mb-8">Demo</h2>
+        <div className="flex flex-wrap gap-3 mb-6">
+          {DEMOS.map((demo) => (
+            <button
+              key={demo.key}
+              onClick={() => switchDemo(demo.key)}
+              className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${
+                activeDemo.key === demo.key
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300'
+              }`}
+            >
+              {demo.label}
+            </button>
+          ))}
+        </div>
         <div className="grid md:grid-cols-2 gap-6">
           <div className="bg-white border border-slate-200 rounded-2xl p-6">
+            <div className="text-xs font-black uppercase tracking-wider text-indigo-500 mb-2">{activeDemo.title}</div>
             <div className="text-sm font-bold text-slate-500 mb-2">Input:</div>
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">build AI project planner SaaS</div>
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">{activeDemo.input}</div>
             <div className="mt-4 flex gap-3">
               <button onClick={playDemo} className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold">Play demo</button>
               <button onClick={resetDemo} className="px-4 py-2 rounded-xl bg-white border border-slate-300 font-bold">Reset demo</button>
@@ -145,17 +197,17 @@ const Landing = () => {
               <div className={`${demoStep >= 1 ? 'opacity-100' : 'opacity-20'} transition-opacity`}>
                 <div className="font-black">Phase 1</div>
                 <ul className="list-disc pl-5 mt-1 space-y-1">
-                  <li className={demoStep >= 1 ? 'opacity-100' : 'opacity-20'}>market research</li>
-                  <li className={demoStep >= 2 ? 'opacity-100' : 'opacity-20'}>define MVP</li>
-                  <li className={demoStep >= 3 ? 'opacity-100' : 'opacity-20'}>design architecture</li>
+                  <li className={demoStep >= 1 ? 'opacity-100' : 'opacity-20'}>{activeDemo.phase1[0]}</li>
+                  <li className={demoStep >= 2 ? 'opacity-100' : 'opacity-20'}>{activeDemo.phase1[1]}</li>
+                  <li className={demoStep >= 3 ? 'opacity-100' : 'opacity-20'}>{activeDemo.phase1[2]}</li>
                 </ul>
               </div>
               <div className={`${demoStep >= 4 ? 'opacity-100' : 'opacity-20'} transition-opacity`}>
                 <div className="font-black">Phase 2</div>
                 <ul className="list-disc pl-5 mt-1 space-y-1">
-                  <li className={demoStep >= 4 ? 'opacity-100' : 'opacity-20'}>backend development</li>
-                  <li className={demoStep >= 5 ? 'opacity-100' : 'opacity-20'}>frontend implementation</li>
-                  <li className={demoStep >= 6 ? 'opacity-100' : 'opacity-20'}>testing</li>
+                  <li className={demoStep >= 4 ? 'opacity-100' : 'opacity-20'}>{activeDemo.phase2[0]}</li>
+                  <li className={demoStep >= 5 ? 'opacity-100' : 'opacity-20'}>{activeDemo.phase2[1]}</li>
+                  <li className={demoStep >= 6 ? 'opacity-100' : 'opacity-20'}>{activeDemo.phase2[2]}</li>
                 </ul>
               </div>
             </div>
