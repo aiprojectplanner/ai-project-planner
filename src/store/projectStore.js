@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabaseClient'
 
+const FREE_PLAN_MAX_PROJECTS = 3
+
 const useProjectStore = create((set, get) => ({
   projectId: null, // Track the current project's database ID
   projectTitle: "Project Roadmap 2026",
@@ -36,6 +38,17 @@ const useProjectStore = create((set, get) => ({
         .eq('id', projectId)
         .select()
     } else {
+      // Enforce free tier limit at persistence boundary for new projects.
+      const { count, error: countError } = await supabase
+        .from('projects')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+
+      if (countError) throw countError
+      if ((count || 0) >= FREE_PLAN_MAX_PROJECTS) {
+        throw new Error('Project limit reached (Free Plan). Upgrade to Pro!')
+      }
+
       // Insert new project
       result = await supabase
         .from('projects')

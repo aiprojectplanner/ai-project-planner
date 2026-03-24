@@ -69,7 +69,8 @@ const AIPlanner = () => {
       navigate('/editor')
     } catch (err) {
       console.error('Error generating plan:', err)
-      setError(err.message)
+      const message = err?.message || 'Failed to generate project plan.'
+      setError(message)
     } finally {
       setLoading(false)
     }

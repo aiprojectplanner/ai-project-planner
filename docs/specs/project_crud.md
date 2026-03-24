@@ -13,9 +13,11 @@
  - AI Prompt (for AI generation) 
  
  ## Processing Logic 
- - Generate unique UUID for new projects. 
- - Handle "upsert" logic: update if `id` exists, else insert. 
- - Enforce RLS: `user_id` must match current session. 
+- Use database-generated project ids (no frontend UUID generation). 
+- Insert vs update: update if `projectId` exists in store, otherwise create a new row. 
+- Enforce RLS: `user_id` must match current session. 
+- Enforce Free plan project-count limit at the persistence boundary before insert (`max 3` projects per user in current implementation). 
+- Planned hardening: enforce the same create limit at DB policy layer (migration-first) to prevent bypass via non-UI write paths. 
  
  ## Database Tables 
  - `projects` 

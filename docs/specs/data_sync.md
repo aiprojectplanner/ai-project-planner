@@ -14,6 +14,7 @@
  ## Processing Logic 
 - **Manual save only**: Local edits update Zustand immediately; remote persistence happens only on explicit save. 
 - **Insert vs Update**: If `projectId` exists, update the existing `projects` row; otherwise insert a new row. 
+- **Create-time limit enforcement**: On insert, the persistence layer checks the current user project count and rejects creation when the Free plan limit (`3`) is reached. 
 - **No conflict resolution**: There is currently no cross-device merge or conflict detection logic. 
  
  ## Database Tables 

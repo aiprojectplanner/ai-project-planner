@@ -63,14 +63,15 @@ Code references:
 
 ## Partially Implemented
 
-### Free Plan Limits (UI-only)
+### Free Plan Limits (UI + persistence boundary)
 - A Free plan limit concept exists in UI messaging and dashboard gating.
-- Enforcement is not implemented in the database layer (RLS/policies) or at the persistence boundary (insert/update) for all creation paths.
+- The app now enforces `max 3 projects` before insert in `projectStore.saveProject` (manual editor save and AI auto-save creation path).
+- Enforcement is still not implemented in the database policy layer (RLS/policies), so direct external writes are not restricted by this rule yet.
 
 Evidence:
 - Strategy: `docs/strategy/PRODUCT_SCOPE.md` defines Free vs Pro and the 3-project limit.
 - Roadmap: `docs/roadmap/ROADMAP.md` marks enforcement as not done.
-- Code: `src/pages/Dashboard.jsx` contains UI-level gating; `src/store/projectStore.js` does not enforce plan limits on save.
+- Code: `src/pages/Dashboard.jsx` (UI gating) and `src/store/projectStore.js` (insert-time limit check).
 
 ### Pro Gating for AI Generation (Not enforced)
 - Strategy states AI generation is Pro-only.
