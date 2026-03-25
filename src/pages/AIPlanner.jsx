@@ -15,6 +15,42 @@ const AIPlanner = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
+  // Constraints for stable and readable Gantt output
+  const [templateKey, setTemplateKey] = useState('other') // ecom | saas | other
+  const [durationMode, setDurationMode] = useState('lt6') // lt6 | mid | high | custom
+  const [customMonths, setCustomMonths] = useState(12) // 1..18
+
+  const [granularityMode, setGranularityMode] = useState('coarse') // coarse | fine | custom
+  const [customTaskCount, setCustomTaskCount] = useState(9) // 3..19
+
+  const durationPresetToMonths = {
+    lt6: 6,
+    mid: 12,
+    high: 18,
+  }
+
+  const clampInt = (v, min, max) => {
+    const n = Number.parseInt(String(v), 10)
+    if (Number.isNaN(n)) return min
+    return Math.min(max, Math.max(min, n))
+  }
+
+  const expectedTotalMonths =
+    durationMode === 'custom' ? clampInt(customMonths, 1, 18) : durationPresetToMonths[durationMode]
+
+  // Keep task count bounded for readability (coarse < 10, fine < 20)
+  const maxTasks = granularityMode === 'custom'
+    ? clampInt(customTaskCount, 3, 19)
+    : granularityMode === 'coarse'
+      ? 9
+      : 19
+
+  const constraints = {
+    templateKey,
+    expectedTotalMonths,
+    maxTasks,
+  }
+
   const handleGenerate = async (e) => {
     e.preventDefault()
     if (!idea.trim()) return
@@ -35,7 +71,7 @@ const AIPlanner = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`
         },
-        body: JSON.stringify({ idea })
+        body: JSON.stringify({ idea, constraints })
       })
 
       const contentType = response.headers.get('content-type') || ''
@@ -113,6 +149,101 @@ const AIPlanner = () => {
                   className="w-full h-32 bg-slate-50 border border-slate-200 rounded-2xl p-6 text-sm font-medium focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all resize-none"
                   disabled={loading}
                 />
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left">
+                <div className="text-xs font-black uppercase tracking-wider text-slate-500 mb-3">
+                  {t('aiPlanner.constraintsTitle')}
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-3">
+                  <div className="space-y-2">
+                    <div className="text-[11px] font-bold text-slate-700">{t('aiPlanner.durationLabel')}</div>
+                    <label className="flex items-center gap-2 text-[12px] text-slate-600">
+                      <input type="radio" name="duration" checked={durationMode === 'lt6'} onChange={() => setDurationMode('lt6')} />
+                      {t('aiPlanner.duration.lt6')}
+                    </label>
+                    <label className="flex items-center gap-2 text-[12px] text-slate-600">
+                      <input type="radio" name="duration" checked={durationMode === 'mid'} onChange={() => setDurationMode('mid')} />
+                      {t('aiPlanner.duration.mid')}
+                    </label>
+                    <label className="flex items-center gap-2 text-[12px] text-slate-600">
+                      <input type="radio" name="duration" checked={durationMode === 'high'} onChange={() => setDurationMode('high')} />
+                      {t('aiPlanner.duration.high')}
+                    </label>
+                    <label className="flex items-center gap-2 text-[12px] text-slate-600">
+                      <input type="radio" name="duration" checked={durationMode === 'custom'} onChange={() => setDurationMode('custom')} />
+                      {t('aiPlanner.duration.custom')}
+                    </label>
+                    {durationMode === 'custom' && (
+                      <input
+                        type="number"
+                        value={customMonths}
+                        min={1}
+                        max={18}
+                        onChange={(e) => setCustomMonths(e.target.value)}
+                        className="w-full mt-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500"
+                      />
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-[11px] font-bold text-slate-700">{t('aiPlanner.granularityLabel')}</div>
+                    <label className="flex items-center gap-2 text-[12px] text-slate-600">
+                      <input
+                        type="radio"
+                        name="granularity"
+                        checked={granularityMode === 'coarse'}
+                        onChange={() => setGranularityMode('coarse')}
+                      />
+                      {t('aiPlanner.granularity.coarse')}
+                    </label>
+                    <label className="flex items-center gap-2 text-[12px] text-slate-600">
+                      <input
+                        type="radio"
+                        name="granularity"
+                        checked={granularityMode === 'fine'}
+                        onChange={() => setGranularityMode('fine')}
+                      />
+                      {t('aiPlanner.granularity.fine')}
+                    </label>
+                    <label className="flex items-center gap-2 text-[12px] text-slate-600">
+                      <input
+                        type="radio"
+                        name="granularity"
+                        checked={granularityMode === 'custom'}
+                        onChange={() => setGranularityMode('custom')}
+                      />
+                      {t('aiPlanner.granularity.custom')}
+                    </label>
+                    {granularityMode === 'custom' && (
+                      <input
+                        type="number"
+                        value={customTaskCount}
+                        min={3}
+                        max={19}
+                        onChange={(e) => setCustomTaskCount(e.target.value)}
+                        className="w-full mt-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500"
+                      />
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-[11px] font-bold text-slate-700">{t('aiPlanner.templateLabel')}</div>
+                    <select
+                      value={templateKey}
+                      onChange={(e) => setTemplateKey(e.target.value)}
+                      disabled={loading}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500"
+                    >
+                      <option value="ecom">{t('aiPlanner.template.ecom')}</option>
+                      <option value="saas">{t('aiPlanner.template.saas')}</option>
+                      <option value="other">{t('aiPlanner.template.other')}</option>
+                    </select>
+
+                    <p className="text-[11px] text-slate-500 leading-snug">{t('aiPlanner.constraintsHelp')}</p>
+                  </div>
+                </div>
               </div>
 
               {error && (

@@ -4,7 +4,7 @@
  
  ### POST /api/generate-plan 
  - **Description**: Generates a project plan based on a user's idea. 
- - **Input**: `{ "idea": "string" }` 
+- **Input**: `{ "idea": "string", "constraints"?: { "expectedTotalMonths"?: number, "maxTasks"?: number, "templateKey"?: string } }` 
  - **Output**: Structured JSON containing project tasks and timeline. 
 - **Auth requirement**: Requires `Authorization: Bearer <supabase_access_token>`.
 - **Pro access gate**: Only users whose `profiles.plan_tier = 'pro'` are authorized to use this endpoint.
