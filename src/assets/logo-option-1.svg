@@ -1,0 +1,25 @@
+<svg width="256" height="64" viewBox="0 0 256 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>AI Planner Logo Option 1</title>
+  <rect x="0" y="0" width="256" height="64" rx="16" fill="white"/>
+
+  <!-- Icon -->
+  <g transform="translate(16 16)">
+    <!-- sparkle -->
+    <path d="M13 2L14.4 6.6L19 8L14.4 9.4L13 14L11.6 9.4L7 8L11.6 6.6L13 2Z" fill="#6366F1"/>
+    <!-- nodes -->
+    <circle cx="6" cy="14" r="2" fill="#94A3B8"/>
+    <circle cx="6" cy="22" r="2" fill="#94A3B8"/>
+    <circle cx="6" cy="30" r="2" fill="#94A3B8"/>
+    <!-- gantt bars -->
+    <rect x="10" y="11" width="34" height="6" rx="3" fill="#6366F1"/>
+    <rect x="10" y="19" width="26" height="6" rx="3" fill="#6366F1"/>
+    <rect x="10" y="27" width="40" height="6" rx="3" fill="#6366F1"/>
+  </g>
+
+  <!-- Text -->
+  <g transform="translate(88 18)">
+    <text x="0" y="20" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="20" font-weight="800" letter-spacing="-0.2">
+      <tspan fill="#6366F1">AI</tspan><tspan fill="#0F172A"> Planner</tspan>
+    </text>
+  </g>
+</svg>

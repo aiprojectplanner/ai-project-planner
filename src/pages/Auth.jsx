@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { Brain, Mail, Lock, Loader2 } from 'lucide-react'
+import { Mail, Lock, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import { useI18n } from '../i18n/useI18n'
+import BrandLogo from '../components/BrandLogoImage'
 
 const Auth = () => {
   const navigate = useNavigate()
@@ -44,8 +45,8 @@ const Auth = () => {
       <div className="max-w-md w-full">
         <div className="bg-white p-10 rounded-[40px] border border-slate-200 shadow-2xl shadow-slate-100">
           <div className="text-center mb-10">
-            <div className="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl border border-indigo-100">
-              <Brain size={32} />
+            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 border border-slate-200 overflow-hidden">
+              <BrandLogo variant="mark" size={46} title={t('common.appName')} />
             </div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
               {isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}

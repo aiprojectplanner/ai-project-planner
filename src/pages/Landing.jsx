@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import { useI18n } from '../i18n/useI18n'
 import { getLandingDemos, messages } from '../i18n/messages'
+import BrandLogo from '../components/BrandLogoImage'
 
 const Landing = () => {
   const navigate = useNavigate()
@@ -63,7 +64,12 @@ const Landing = () => {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-          <div className="font-black tracking-tight">{t('common.appName')}</div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-slate-200 overflow-hidden">
+              <BrandLogo variant="mark" size={28} title={t('common.appName')} />
+            </div>
+            <div className="font-black tracking-tight">{t('common.appName')}</div>
+          </div>
           <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600">
             <button type="button" onClick={() => scrollToSection('problem')} className="hover:text-indigo-600">
               {t('landing.navProblem')}

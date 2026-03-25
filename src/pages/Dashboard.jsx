@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { Plus, Brain, Clock, CheckCircle2, Loader2, Trash2, Pencil, Check, X } from 'lucide-react'
+import { Plus, Clock, CheckCircle2, Loader2, Trash2, Pencil, Check, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import useAuthStore from '../store/authStore'
 import useProjectStore from '../store/projectStore'
 import { useI18n } from '../i18n/useI18n'
+import BrandLogo from '../components/BrandLogoImage'
 
 const Dashboard = () => {
   const navigate = useNavigate()
@@ -135,8 +136,8 @@ const Dashboard = () => {
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
         
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
-          <div className="w-16 h-16 bg-white/10 text-indigo-400 rounded-2xl flex items-center justify-center text-2xl border border-white/10 backdrop-blur-sm shrink-0">
-            <Brain size={32} />
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-2xl border border-white/10 backdrop-blur-sm shrink-0 overflow-hidden">
+            <BrandLogo variant="mark" size={46} title={t('common.appName')} />
           </div>
           <div>
             <h3 className="text-white text-xl font-black tracking-tight mb-1">{t('dashboard.aiBannerTitle')}</h3>

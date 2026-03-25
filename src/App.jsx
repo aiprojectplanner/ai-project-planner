@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom'
-import { LayoutDashboard, GanttChart, Wand2, BarChart, Bell, Brain, LogOut, Loader2, CreditCard } from 'lucide-react'
+import { LayoutDashboard, GanttChart, Wand2, BarChart, Bell, LogOut, Loader2, CreditCard } from 'lucide-react'
 
 import Dashboard from './pages/Dashboard'
 import ProjectEditor from './pages/ProjectEditor'
@@ -11,6 +11,7 @@ import Auth from './pages/Auth'
 import useAuthStore from './store/authStore'
 import LanguageSwitcher from './components/LanguageSwitcher'
 import { useI18n } from './i18n/useI18n'
+import BrandLogo from './components/BrandLogoImage'
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuthStore()
@@ -90,8 +91,8 @@ const App = () => {
         {/* Sidebar - Hidden on Auth Page */}
         {user && <aside className="w-64 bg-slate-900 flex flex-col shrink-0 text-slate-300">
           <div className="p-6 flex items-center gap-3 border-b border-slate-800">
-            <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white">
-              <Brain size={18} />
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-slate-800 overflow-hidden">
+              <BrandLogo variant="mark" size={28} title={t('common.appName')} />
             </div>
             <h1 className="font-bold text-lg tracking-tight text-white">{t('common.appName')}</h1>
           </div>
