@@ -2,9 +2,12 @@ import React, { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { Brain, Mail, Lock, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import LanguageSwitcher from '../components/LanguageSwitcher'
+import { useI18n } from '../i18n/useI18n'
 
 const Auth = () => {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -20,7 +23,7 @@ const Auth = () => {
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
-        alert('Check your email for the confirmation link!')
+        alert(t('auth.confirmEmailAlert'))
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
@@ -34,7 +37,10 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8 relative">
+      <div className="absolute top-6 right-6 z-10">
+        <LanguageSwitcher />
+      </div>
       <div className="max-w-md w-full">
         <div className="bg-white p-10 rounded-[40px] border border-slate-200 shadow-2xl shadow-slate-100">
           <div className="text-center mb-10">
@@ -42,16 +48,16 @@ const Auth = () => {
               <Brain size={32} />
             </div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-              {isSignUp ? 'Create Account' : 'Welcome Back'}
+              {isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
             </h1>
             <p className="text-slate-400 text-sm font-medium mt-2">
-              {isSignUp ? 'Start planning your projects' : 'Sign in to access your projects'}
+              {isSignUp ? t('auth.subtitleSignUp') : t('auth.subtitleSignIn')}
             </p>
           </div>
 
           <form onSubmit={handleAuth} className="space-y-4">
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Email Address</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">{t('auth.email')}</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
                 <input 
@@ -66,7 +72,7 @@ const Auth = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Password</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">{t('auth.password')}</label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
                 <input 
@@ -91,7 +97,7 @@ const Auth = () => {
               disabled={loading}
               className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 flex items-center justify-center gap-2"
             >
-              {loading ? <Loader2 className="animate-spin" size={18} /> : (isSignUp ? 'Sign Up' : 'Sign In')}
+              {loading ? <Loader2 className="animate-spin" size={18} /> : (isSignUp ? t('auth.signUp') : t('auth.signIn'))}
             </button>
           </form>
 
@@ -100,7 +106,7 @@ const Auth = () => {
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-xs font-black text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest"
             >
-              {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+              {isSignUp ? t('auth.toggleToSignIn') : t('auth.toggleToSignUp')}
             </button>
           </div>
         </div>

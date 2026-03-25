@@ -20,6 +20,7 @@ Provide a public-facing entry page that communicates value quickly and drives vi
 5. CTA Section
 
 ## Interaction Logic
+- Language switcher (EN / 中文) is available in the sticky header; copy is driven by `src/i18n/messages.js` (see `docs/specs/i18n.md`).
 - Top navigation anchors scroll to sections.
 - "Try it free" and "Start planning" trigger route navigation to `/auth`.
 - Demo section supports "Play demo" and "Reset demo" interactions.

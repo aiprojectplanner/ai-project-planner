@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import useAuthStore from '../store/authStore'
 import useProjectStore from '../store/projectStore'
+import { useI18n } from '../i18n/useI18n'
 
 const Dashboard = () => {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const { user } = useAuthStore()
   const { loadProject } = useProjectStore()
   const [projects, setProjects] = useState([])
@@ -45,7 +47,7 @@ const Dashboard = () => {
 
   const createNewProject = () => {
     if (projects.length >= maxProjects) {
-      alert("Project limit reached (Free Plan). Upgrade to Pro!")
+      alert(t('dashboard.limitAlert'))
     } else {
       // Clear current project state before navigating to editor
       useProjectStore.setState({ projectId: null, projectTitle: "New Project", tasks: [] })
@@ -55,7 +57,7 @@ const Dashboard = () => {
 
   const deleteProject = async (e, id) => {
     e.stopPropagation() // Prevent navigating to editor
-    if (!confirm('Are you sure you want to delete this project?')) return
+    if (!confirm(t('dashboard.deleteConfirm'))) return
 
     try {
       const { error } = await supabase
@@ -67,7 +69,7 @@ const Dashboard = () => {
       setProjects(projects.filter(p => p.id !== id))
     } catch (error) {
       console.error('Error deleting project:', error)
-      alert('Failed to delete project')
+      alert(t('dashboard.deleteFailed'))
     }
   }
 
@@ -87,7 +89,7 @@ const Dashboard = () => {
     e.stopPropagation()
     const nextTitle = editingTitle.trim()
     if (!nextTitle) {
-      alert('Project title cannot be empty.')
+      alert(t('dashboard.titleEmpty'))
       return
     }
 
@@ -106,7 +108,7 @@ const Dashboard = () => {
       setEditingTitle('')
     } catch (error) {
       console.error('Error renaming project:', error)
-      alert('Failed to rename project')
+      alert(t('dashboard.renameFailed'))
     }
   }
 
@@ -115,16 +117,16 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t('dashboard.title')}</h1>
           <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">
-            Free Plan · {projects.length}/{maxProjects} Projects Used
+            {t('dashboard.freePlanUsage', { current: projects.length, max: maxProjects })}
           </p>
         </div>
         <button 
           onClick={createNewProject}
           className="px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 text-sm uppercase tracking-widest"
         >
-          <Plus size={18} /> New Project
+          <Plus size={18} /> {t('dashboard.newProject')}
         </button>
       </div>
 
@@ -137,10 +139,8 @@ const Dashboard = () => {
             <Brain size={32} />
           </div>
           <div>
-            <h3 className="text-white text-xl font-black tracking-tight mb-1">Generate Project with AI</h3>
-            <p className="text-slate-400 text-sm font-medium max-w-md">
-              Describe your idea and get a full roadmap. AI generated plans will be automatically saved.
-            </p>
+            <h3 className="text-white text-xl font-black tracking-tight mb-1">{t('dashboard.aiBannerTitle')}</h3>
+            <p className="text-slate-400 text-sm font-medium max-w-md">{t('dashboard.aiBannerBody')}</p>
           </div>
         </div>
         
@@ -148,13 +148,13 @@ const Dashboard = () => {
           onClick={() => navigate('/ai-planner')}
           className="relative z-10 px-8 py-3 bg-white/10 text-white font-bold rounded-xl border border-white/20 hover:bg-white/20 transition-all text-xs uppercase tracking-widest backdrop-blur-sm"
         >
-          Start AI Generation
+          {t('dashboard.startAi')}
         </button>
       </div>
 
       {/* Project Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <h2 className="col-span-full font-black text-xs text-slate-400 uppercase tracking-widest mb-2">My Projects</h2>
+        <h2 className="col-span-full font-black text-xs text-slate-400 uppercase tracking-widest mb-2">{t('dashboard.myProjects')}</h2>
         
         {loading ? (
           <div className="col-span-full flex justify-center py-12">
@@ -178,7 +178,7 @@ const Dashboard = () => {
                   <button
                     onClick={(e) => startRename(e, project)}
                     className="absolute top-6 right-16 p-2 text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                    title="Rename"
+                    title={t('dashboard.rename')}
                   >
                     <Pencil size={16} />
                   </button>
@@ -203,14 +203,14 @@ const Dashboard = () => {
                       <button
                         onClick={(e) => submitRename(e, project.id)}
                         className="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-50"
-                        title="Save"
+                        title={t('dashboard.save')}
                       >
                         <Check size={14} />
                       </button>
                       <button
                         onClick={cancelRename}
                         className="p-1.5 rounded-md text-slate-500 hover:bg-slate-100"
-                        title="Cancel"
+                        title={t('dashboard.cancel')}
                       >
                         <X size={14} />
                       </button>
@@ -227,7 +227,7 @@ const Dashboard = () => {
                     <img src={`https://ui-avatars.com/api/?name=${user?.email}&background=random`} className="w-8 h-8 rounded-full border-2 border-white" alt="Avatar" />
                   </div>
                   <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full uppercase tracking-widest flex items-center gap-1">
-                    <CheckCircle2 size={8} /> Active
+                    <CheckCircle2 size={8} /> {t('dashboard.active')}
                   </span>
                 </div>
               </div>
@@ -241,7 +241,7 @@ const Dashboard = () => {
               <div className="w-16 h-16 bg-white text-slate-300 rounded-full flex items-center justify-center mb-6 group-hover:text-indigo-500 shadow-sm transition-all shrink-0">
                 <Plus size={24} />
               </div>
-              <p className="text-xs font-black text-slate-400 group-hover:text-indigo-600 transition-all uppercase tracking-widest">Create New Project</p>
+              <p className="text-xs font-black text-slate-400 group-hover:text-indigo-600 transition-all uppercase tracking-widest">{t('dashboard.createNew')}</p>
             </div>
           </>
         )}

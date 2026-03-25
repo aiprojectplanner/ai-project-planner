@@ -9,6 +9,8 @@ import Landing from './pages/Landing'
 import Pricing from './pages/Pricing'
 import Auth from './pages/Auth'
 import useAuthStore from './store/authStore'
+import LanguageSwitcher from './components/LanguageSwitcher'
+import { useI18n } from './i18n/useI18n'
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuthStore()
@@ -31,15 +33,21 @@ const ProtectedRoute = ({ children }) => {
 const PageHeader = () => {
   const location = useLocation()
   const { signOut } = useAuthStore()
-  
+  const { t } = useI18n()
+
   const getPageTitle = () => {
-    switch(location.pathname) {
-      case '/': return 'Dashboard'
-      case '/dashboard': return 'Dashboard'
-      case '/editor': return 'Project Editor'
-      case '/ai-planner': return 'AI Planner'
-      case '/pricing': return 'Pricing'
-      default: return 'Dashboard'
+    switch (location.pathname) {
+      case '/':
+      case '/dashboard':
+        return t('header.dashboard')
+      case '/editor':
+        return t('header.editor')
+      case '/ai-planner':
+        return t('header.aiPlanner')
+      case '/pricing':
+        return t('header.pricing')
+      default:
+        return t('header.dashboard')
     }
   }
 
@@ -51,6 +59,7 @@ const PageHeader = () => {
     <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 z-10">
       <h2 className="font-bold text-slate-800 uppercase tracking-wider text-sm">{getPageTitle()}</h2>
       <div className="flex items-center gap-4">
+        <LanguageSwitcher />
         <button className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 rounded-full transition-all">
           <Bell size={20} />
         </button>
@@ -58,7 +67,7 @@ const PageHeader = () => {
         <button 
           onClick={signOut}
           className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-red-500 rounded-full transition-all"
-          title="Sign Out"
+          title={t('header.signOut')}
         >
           <LogOut size={20} />
         </button>
@@ -69,6 +78,7 @@ const PageHeader = () => {
 
 const App = () => {
   const { initialize, user } = useAuthStore()
+  const { t } = useI18n()
 
   useEffect(() => {
     initialize()
@@ -83,31 +93,35 @@ const App = () => {
             <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white">
               <Brain size={18} />
             </div>
-            <h1 className="font-bold text-lg tracking-tight text-white">AI Project Planner</h1>
+            <h1 className="font-bold text-lg tracking-tight text-white">{t('common.appName')}</h1>
           </div>
 
           <nav className="flex-1 px-4 py-6 space-y-1">
             <NavLink to="/dashboard" className={({ isActive }) => `nav-item group ${isActive ? 'active' : ''}`}>
               <LayoutDashboard size={20} className="text-slate-500 group-[.active]:text-indigo-400" />
-              <span className="font-medium text-sm">Dashboard</span>
+              <span className="font-medium text-sm">{t('nav.dashboard')}</span>
             </NavLink>
             <NavLink to="/editor" className={({ isActive }) => `nav-item group ${isActive ? 'active' : ''}`}>
               <GanttChart size={20} className="text-slate-500 group-[.active]:text-indigo-400" />
-              <span className="font-medium text-sm">Project Editor</span>
+              <span className="font-medium text-sm">{t('nav.editor')}</span>
             </NavLink>
             <NavLink to="/ai-planner" className={({ isActive }) => `nav-item group ${isActive ? 'active' : ''}`}>
               <Wand2 size={20} className="text-slate-500 group-[.active]:text-indigo-400" />
-              <span className="font-medium text-sm">AI Planner</span>
+              <span className="font-medium text-sm">{t('nav.aiPlanner')}</span>
             </NavLink>
             <NavLink to="/pricing" className={({ isActive }) => `nav-item group ${isActive ? 'active' : ''}`}>
               <CreditCard size={20} className="text-slate-500 group-[.active]:text-indigo-400" />
-              <span className="font-medium text-sm">Pricing</span>
+              <span className="font-medium text-sm">{t('nav.pricing')}</span>
             </NavLink>
             <div className="nav-item opacity-50 cursor-not-allowed">
               <BarChart size={20} className="text-slate-500" />
-              <span className="font-medium text-sm">Analytics</span>
+              <span className="font-medium text-sm">{t('nav.analytics')}</span>
             </div>
           </nav>
+
+          <div className="px-4 pb-2">
+            <LanguageSwitcher className="w-full justify-center" />
+          </div>
 
           <div className="p-4 border-t border-slate-800 mt-auto">
             <div className="flex items-center gap-3 p-2 bg-slate-800/50 rounded-xl">
@@ -118,7 +132,7 @@ const App = () => {
               />
               <div className="overflow-hidden">
                 <div className="text-xs font-bold text-white truncate">{user?.email?.split('@')[0]}</div>
-                <div className="text-[10px] text-slate-500 truncate">Pro Account</div>
+                <div className="text-[10px] text-slate-500 truncate">{t('sidebar.accountBadge')}</div>
               </div>
             </div>
           </div>

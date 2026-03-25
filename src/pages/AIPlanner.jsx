@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom'
 import useProjectStore from '../store/projectStore'
 import useAuthStore from '../store/authStore'
 import { supabase } from '../lib/supabaseClient'
+import { useI18n } from '../i18n/useI18n'
 
 const AIPlanner = () => {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const { user } = useAuthStore()
   const { importPlan, saveProject } = useProjectStore()
   const [idea, setIdea] = useState('')
@@ -24,7 +26,7 @@ const AIPlanner = () => {
       const { data: { session } } = await supabase.auth.getSession()
       const accessToken = session?.access_token
       if (!accessToken) {
-        throw new Error('Please sign in again to use AI Planner.')
+        throw new Error(t('aiPlanner.signInAgain'))
       }
 
       const response = await fetch('/api/generate-plan', {
@@ -79,7 +81,7 @@ const AIPlanner = () => {
       navigate('/editor')
     } catch (err) {
       console.error('Error generating plan:', err)
-      const message = err?.message || 'Failed to generate project plan.'
+      const message = err?.message || t('aiPlanner.genericError')
       setError(message)
     } finally {
       setLoading(false)
@@ -99,17 +101,15 @@ const AIPlanner = () => {
               <Sparkles size={32} />
             </div>
             
-            <h1 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">AI Project Planner</h1>
-            <p className="text-slate-500 text-sm font-medium mb-8">
-              Describe your project idea and let AI create a roadmap for you.
-            </p>
+            <h1 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">{t('aiPlanner.title')}</h1>
+            <p className="text-slate-500 text-sm font-medium mb-8">{t('aiPlanner.subtitle')}</p>
 
             <form onSubmit={handleGenerate} className="space-y-6">
               <div className="relative">
                 <textarea 
                   value={idea}
                   onChange={(e) => setIdea(e.target.value)}
-                  placeholder="Example: Build a mobile app for plant care with AI diagnosis..."
+                  placeholder={t('aiPlanner.placeholder')}
                   className="w-full h-32 bg-slate-50 border border-slate-200 rounded-2xl p-6 text-sm font-medium focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all resize-none"
                   disabled={loading}
                 />
@@ -129,7 +129,7 @@ const AIPlanner = () => {
                   className="px-8 py-4 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
                   disabled={loading}
                 >
-                  <ArrowLeft size={18} /> Cancel
+                  <ArrowLeft size={18} /> {t('aiPlanner.cancel')}
                 </button>
                 <button 
                   type="submit"
@@ -139,11 +139,11 @@ const AIPlanner = () => {
                   {loading ? (
                     <>
                       <Loader2 size={18} className="animate-spin" />
-                      Generating...
+                      {t('aiPlanner.generating')}
                     </>
                   ) : (
                     <>
-                      <Send size={18} /> Generate Roadmap
+                      <Send size={18} /> {t('aiPlanner.generate')}
                     </>
                   )}
                 </button>
@@ -151,7 +151,7 @@ const AIPlanner = () => {
             </form>
           </div>
         </div>
-        <p className="mt-8 text-slate-400 text-xs font-black uppercase tracking-widest">Powered by OpenRouter AI</p>
+        <p className="mt-8 text-slate-400 text-xs font-black uppercase tracking-widest">{t('aiPlanner.poweredBy')}</p>
       </div>
     </div>
   )

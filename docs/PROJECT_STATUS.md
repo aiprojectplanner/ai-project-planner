@@ -3,7 +3,7 @@
 This document tracks the current implementation state of the project based primarily on the actual codebase (`src/`, `api/`). Strategic intent is referenced from `docs/strategy/PRODUCT_SCOPE.md` and `docs/roadmap/ROADMAP.md`.
 
 ## Current Product Stage
-MVP (early testing). Core flows (auth, dashboard, manual editor, AI generation) are implemented, but key monetization and enforcement rules (Free vs Pro gating and limits) are not yet enforced beyond the UI.
+MVP (early testing). Core flows (auth, dashboard, manual editor, AI generation, bilingual UI) are implemented. Free-tier project creation is enforced in the client persistence path; database-level enforcement requires applying the documented Supabase migration on the target project.
 
 ## Implemented Features
 
@@ -91,22 +91,30 @@ Code references:
 - `src/pages/Pricing.jsx`
 - `src/App.jsx`
 
+### Internationalization (i18n)
+- UI supports English (`en`) and Simplified Chinese (`zh`).
+- Language preference is stored in `localStorage` (`app.locale`).
+- Language switcher appears in the authenticated header and sidebar, on the landing page header, on the auth page, and in the project editor header.
+
+Code references:
+- `src/i18n/I18nProvider.jsx`, `src/i18n/messages.js`, `src/i18n/useI18n.js`
+- `src/components/LanguageSwitcher.jsx`
+- `src/main.jsx` (provider wiring)
+
 ## Partially Implemented
 
-### Free Plan Limits (UI + persistence boundary)
-- A Free plan limit concept exists in UI messaging and dashboard gating.
-- The app now enforces `max 3 projects` before insert in `projectStore.saveProject` (manual editor save and AI auto-save creation path).
-- Enforcement is still not implemented in the database policy layer (RLS/policies), so direct external writes are not restricted by this rule yet.
+### Free Plan Limits (client + optional database policy)
+- UI messaging and dashboard gating reflect the Free plan limit.
+- The app enforces `max 3 projects` before insert in `projectStore.saveProject` (manual editor save and AI auto-save creation path).
+- **Database enforcement**: migration `supabase/migrations/20260324_enforce_free_project_limit.sql` defines an RLS insert policy using `public.can_create_project_for_user`. It must be applied to the Supabase project for the limit to be authoritative for all clients and direct SQL/API access.
 
 Evidence:
 - Strategy: `docs/strategy/PRODUCT_SCOPE.md` defines Free vs Pro and the 3-project limit.
-- Roadmap: `docs/roadmap/ROADMAP.md` marks enforcement as not done.
 - Code: `src/pages/Dashboard.jsx` (UI gating) and `src/store/projectStore.js` (insert-time limit check).
 
-### Pro Gating for AI Generation (Interim enforced)
+### Pro Gating for AI Generation (server enforced)
 - Strategy states AI generation is Pro-only.
-- Current server implementation gates `/api/generate-plan` by bearer auth + `profiles.plan_tier`.
-- Users must have `plan_tier = 'pro'` to access AI generation.
+- Server implementation gates `POST /api/generate-plan` with bearer auth + `profiles.plan_tier === 'pro'`.
 
 Evidence:
 - Strategy: `docs/strategy/PRODUCT_SCOPE.md` (AI generation not included in Free tier).
@@ -115,8 +123,7 @@ Evidence:
 ## Not Yet Implemented
 Referenced in strategy/roadmap but not present in current implementation:
 - Subscription integration webhook sync (Lemon Squeezy/Stripe -> `profiles.plan_tier`).
-- Export formats (PDF/Excel/Image).
-- Multi-language (i18n).
+- Export formats (PDF/Excel/Image) beyond JSON/Markdown.
 - Task dependencies and automated timeline shifting.
 - AI optimization features (risk analysis, resource estimator).
 
@@ -159,21 +166,19 @@ Evidence:
 - `api/generate-plan.js`
 
 ## Known Gaps
-- Free plan limits are not enforced consistently (UI gating only).
-- AI Planner is not gated behind Pro despite strategy stating it should be.
-- Several roadmap items exist as UI placeholders or documentation-only items (Analytics, User Center, exports, subscription).
+- Apply Supabase migrations (including free project insert policy) on production/staging so limits match the codebase assumptions.
+- Several roadmap items remain placeholders or documentation-only (Analytics, User Center, subscription checkout).
 
 ## Next Recommended Tasks
 
 ### P0 (critical)
-- Define and implement an authoritative enforcement layer for Free vs Pro (project limits and AI gating) at the persistence boundary (not UI-only).
-- Add a minimal server-side verification for AI generation access (align with Pro definition).
+- Apply `20260324_enforce_free_project_limit.sql` (and related profile/invite migrations if not yet applied) to the live Supabase project; verify RLS behavior in SQL Editor.
 
 ### P1 (important)
-- Align project rename functionality with roadmap intent (decide where renaming happens: dashboard vs editor, and implement consistently).
 - Create an explicit placeholder spec for Analytics to prevent scope drift if it remains disabled.
+- Expand i18n coverage for any new screens and for API error message mapping where feasible.
 
 ### P2 (future)
-- Subscription integration (Lemon Squeezy) and export functionality.
+- Subscription integration (Lemon Squeezy) and additional export formats (PDF/Excel/Image).
 - Task dependency scheduling and automated timeline shifting.
-- i18n support.
+- Optional: restore deferred "non-working day" calendar behavior in the editor behind a future toggle.

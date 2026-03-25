@@ -3,16 +3,21 @@ import { ArrowLeft, Plus, Save, Trash2, Loader2, CheckCircle, Download, PanelLef
 import { useNavigate } from 'react-router-dom'
 import useProjectStore from '../store/projectStore'
 import useAuthStore from '../store/authStore'
+import LanguageSwitcher from '../components/LanguageSwitcher'
+import { useI18n } from '../i18n/useI18n'
 
 const ProjectEditor = () => {
   const navigate = useNavigate()
   const { user } = useAuthStore()
+  const { t } = useI18n()
   const [isSaving, setIsSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState(null) // 'success' | 'error' | null
   const [leftPanelWidth, setLeftPanelWidth] = useState(650)
   const [isTaskPanelCollapsed, setIsTaskPanelCollapsed] = useState(false)
   const resizeStateRef = useRef({ active: false })
   const workspaceRef = useRef(null)
+  const ganttRef = useRef(null)
+  const [dragState, setDragState] = useState(null)
 
   const { 
     projectTitle, 
@@ -32,6 +37,12 @@ const ProjectEditor = () => {
     const e = new Date(end)
     const diff = Math.ceil((e - s) / (1000 * 60 * 60 * 24))
     return diff > 0 ? diff : 0
+  }
+
+  const addDays = (dateStr, days) => {
+    const d = new Date(dateStr)
+    d.setDate(d.getDate() + days)
+    return d.toISOString().split('T')[0]
   }
 
   const timelineMeta = useMemo(() => {
@@ -54,10 +65,10 @@ const ProjectEditor = () => {
         key={i} 
         className="flex-1 border-r border-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400 uppercase tracking-widest"
       >
-        Week {i + 1}
+        {t('editor.weekLabel', { n: i + 1 })}
       </div>
     ))
-  }, [timelineMeta.weeks])
+  }, [timelineMeta.weeks, t])
 
   const gridLines = useMemo(() => {
     return Array.from({ length: timelineMeta.weeks }).map((_, i) => (
@@ -86,9 +97,71 @@ const ProjectEditor = () => {
     }
   }, [isTaskPanelCollapsed])
 
+  useEffect(() => {
+    const onMouseMove = (e) => {
+      if (!dragState || !ganttRef.current) return
+
+      const rect = ganttRef.current.getBoundingClientRect()
+      const chartWidth = Math.max(rect.width, 1)
+      const pxDelta = e.clientX - dragState.startClientX
+      const dayDelta = Math.round((pxDelta / chartWidth) * timelineMeta.spanDays)
+
+      if (dragState.mode === 'move') {
+        const nextStart = addDays(dragState.originalStart, dayDelta)
+        const nextEnd = addDays(dragState.originalEnd, dayDelta)
+        updateTask(dragState.taskId, 'start', nextStart)
+        updateTask(dragState.taskId, 'end', nextEnd)
+        setDragState((prev) => (prev ? { ...prev, clientX: e.clientX, clientY: e.clientY } : prev))
+        return
+      }
+
+      if (dragState.mode === 'start') {
+        const candidate = addDays(dragState.originalStart, dayDelta)
+        const maxStart = dragState.originalEnd
+        const nextStart = new Date(candidate) > new Date(maxStart) ? maxStart : candidate
+        updateTask(dragState.taskId, 'start', nextStart)
+        setDragState((prev) => (prev ? { ...prev, clientX: e.clientX, clientY: e.clientY } : prev))
+        return
+      }
+
+      if (dragState.mode === 'end') {
+        const candidate = addDays(dragState.originalEnd, dayDelta)
+        const minEnd = dragState.originalStart
+        const nextEnd = new Date(candidate) < new Date(minEnd) ? minEnd : candidate
+        updateTask(dragState.taskId, 'end', nextEnd)
+        setDragState((prev) => (prev ? { ...prev, clientX: e.clientX, clientY: e.clientY } : prev))
+      }
+    }
+
+    const onMouseUp = () => {
+      if (dragState) setDragState(null)
+    }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [dragState, timelineMeta.spanDays, updateTask])
+
   const startResizing = (e) => {
     e.preventDefault()
     resizeStateRef.current.active = true
+  }
+
+  const startTaskDrag = (e, task, mode) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragState({
+      taskId: task.id,
+      mode,
+      startClientX: e.clientX,
+      clientX: e.clientX,
+      clientY: e.clientY,
+      originalStart: task.start,
+      originalEnd: task.end
+    })
   }
 
   const resetPanelWidth = () => {
@@ -160,6 +233,8 @@ const ProjectEditor = () => {
     downloadTextFile(filename, lines.join('\n'), 'text/markdown;charset=utf-8')
   }
 
+  const draggingTask = dragState ? tasks.find((t) => t.id === dragState.taskId) : null
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       {/* Editor Header */}
@@ -178,34 +253,35 @@ const ProjectEditor = () => {
             className="text-xl font-black text-slate-800 border-none outline-none focus:ring-2 focus:ring-indigo-100 px-2 rounded-lg bg-transparent hover:bg-slate-50 transition-colors"
           />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap justify-end">
+          <LanguageSwitcher />
           {saveStatus === 'success' && (
             <span className="text-emerald-500 text-xs font-bold flex items-center gap-1 animate-fade-in">
-              <CheckCircle size={14} /> Saved
+              <CheckCircle size={14} /> {t('editor.saved')}
             </span>
           )}
           {saveStatus === 'error' && (
             <span className="text-red-500 text-xs font-bold animate-fade-in">
-              Error saving
+              {t('editor.errorSaving')}
             </span>
           )}
           <button 
             onClick={addTask} 
             className="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all flex items-center gap-2"
           >
-            <Plus size={18} /> Add Task
+            <Plus size={18} /> {t('editor.addTask')}
           </button>
           <button
             onClick={exportJson}
             className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all flex items-center gap-2"
           >
-            <Download size={16} /> Export JSON
+            <Download size={16} /> {t('editor.exportJson')}
           </button>
           <button
             onClick={exportMarkdown}
             className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all flex items-center gap-2"
           >
-            <Download size={16} /> Export MD
+            <Download size={16} /> {t('editor.exportMd')}
           </button>
           <button 
             onClick={handleSave}
@@ -213,7 +289,7 @@ const ProjectEditor = () => {
             className="bg-slate-900 text-white px-6 py-2 rounded-xl text-sm font-black hover:bg-slate-800 shadow-lg shadow-slate-200 transition-all flex items-center gap-2 disabled:opacity-50"
           >
             {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-            {isSaving ? 'Saving...' : 'Save Project'}
+            {isSaving ? t('editor.saving') : t('editor.saveProject')}
           </button>
         </div>
       </header>
@@ -229,12 +305,12 @@ const ProjectEditor = () => {
           <table className="w-full text-left border-collapse table-fixed">
             <thead className="bg-slate-50 sticky top-0 z-10 border-b border-slate-200">
               <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                <th className="py-3 px-4 w-10">#</th>
-                <th className="py-3 px-2 w-40">Task Name</th>
-                <th className="py-3 px-2 w-32">Start Date</th>
-                <th className="py-3 px-2 w-32">End Date</th>
-                <th className="py-3 px-2 w-20 text-center">Dur</th>
-                <th className="py-3 px-2 w-20 text-center">Dep</th>
+                <th className="py-3 px-4 w-10">{t('editor.colNumber')}</th>
+                <th className="py-3 px-2 w-40">{t('editor.colTaskName')}</th>
+                <th className="py-3 px-2 w-32">{t('editor.colStart')}</th>
+                <th className="py-3 px-2 w-32">{t('editor.colEnd')}</th>
+                <th className="py-3 px-2 w-20 text-center">{t('editor.colDur')}</th>
+                <th className="py-3 px-2 w-20 text-center">{t('editor.colDep')}</th>
                 <th className="py-3 px-2 w-12 text-center"></th>
               </tr>
             </thead>
@@ -299,7 +375,7 @@ const ProjectEditor = () => {
           <button
             onClick={() => setIsTaskPanelCollapsed((v) => !v)}
             className="p-1 rounded hover:bg-slate-200 text-slate-500"
-            title={isTaskPanelCollapsed ? 'Expand task panel' : 'Collapse task panel'}
+            title={isTaskPanelCollapsed ? t('editor.expandPanel') : t('editor.collapsePanel')}
           >
             {isTaskPanelCollapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
           </button>
@@ -308,13 +384,13 @@ const ProjectEditor = () => {
               onMouseDown={startResizing}
               onDoubleClick={resetPanelWidth}
               className="w-2 flex-1 min-h-[80px] rounded bg-slate-300 hover:bg-slate-400 cursor-col-resize"
-              title="Drag to resize task panel"
+              title={t('editor.resizePanel')}
             />
           )}
         </div>
 
         {/* Right: Gantt Visualization */}
-        <div className="flex-1 bg-white overflow-hidden relative">
+        <div ref={ganttRef} className="flex-1 bg-white overflow-hidden relative">
           {/* Timeline Header */}
           <div className="h-10 bg-slate-50 border-b border-slate-200 flex sticky top-0 z-10">
             {timelineHeaders}
@@ -340,17 +416,48 @@ const ProjectEditor = () => {
                 return (
                   <div key={task.id} className="h-10 border-b border-slate-50 relative">
                     <div 
-                      className="h-6 rounded-lg absolute top-2 transition-all duration-300 shadow-lg bg-indigo-500 shadow-indigo-100"
+                      onMouseDown={(e) => startTaskDrag(e, task, 'move')}
+                      title={t('editor.dragMove')}
+                      className="h-6 rounded-lg absolute top-2 transition-all duration-300 shadow-lg bg-indigo-500 shadow-indigo-100 cursor-move flex items-center"
                       style={{ 
                         left: `${leftPercent}%`, 
                         width: `${widthPercent}%` 
                       }}
-                    />
+                    >
+                      <button
+                        onMouseDown={(e) => startTaskDrag(e, task, 'start')}
+                        className="w-2 h-full rounded-l-lg bg-indigo-700/70 hover:bg-indigo-700 cursor-ew-resize shrink-0"
+                        title={t('editor.dragStart')}
+                      />
+                      <span className="px-2 text-[10px] font-bold text-white truncate select-none">
+                        {task.name}
+                      </span>
+                      <button
+                        onMouseDown={(e) => startTaskDrag(e, task, 'end')}
+                        className="w-2 h-full rounded-r-lg bg-indigo-700/70 hover:bg-indigo-700 cursor-ew-resize ml-auto shrink-0"
+                        title={t('editor.dragEnd')}
+                      />
+                    </div>
                   </div>
                 )
               })}
             </div>
           </div>
+          {dragState && draggingTask && (
+            <div
+              className="absolute z-30 pointer-events-none px-3 py-2 rounded-lg bg-slate-900 text-white text-[11px] shadow-xl"
+              style={{
+                left: `${dragState.clientX + 12}px`,
+                top: `${dragState.clientY - 10}px`,
+                transform: 'translate(-100%, -100%)'
+              }}
+            >
+              <div className="font-bold truncate max-w-[220px]">{draggingTask.name}</div>
+              <div className="text-slate-200">
+                {draggingTask.start}{' -> '}{draggingTask.end}
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>

@@ -17,3 +17,6 @@
 
 ## 5. Project Export
 - **How it works**: In Project Editor, users can export the current project as JSON or Markdown via client-side file generation.
+
+## 6. Internationalization
+- **How it works**: Users switch between English and Simplified Chinese via `LanguageSwitcher`; strings live in `src/i18n/messages.js` and `document.documentElement.lang` updates with locale. See `docs/specs/i18n.md`.
