@@ -370,23 +370,29 @@ const ProjectEditor = () => {
         </div>
         )}
 
-        {/* Resize / Collapse Controls */}
-        <div className="w-4 shrink-0 bg-slate-50 border-r border-slate-200 flex flex-col items-center py-2 gap-3">
-          <button
-            onClick={() => setIsTaskPanelCollapsed((v) => !v)}
-            className="p-1 rounded hover:bg-slate-200 text-slate-500"
-            title={isTaskPanelCollapsed ? t('editor.expandPanel') : t('editor.collapsePanel')}
-          >
-            {isTaskPanelCollapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
-          </button>
+        {/* Splitter: full-height resize track + collapse toggle centered on the divider */}
+        <div className="relative w-10 shrink-0 self-stretch min-h-0 bg-slate-50 border-r border-slate-200">
           {!isTaskPanelCollapsed && (
             <div
               onMouseDown={startResizing}
               onDoubleClick={resetPanelWidth}
-              className="w-2 flex-1 min-h-[80px] rounded bg-slate-300 hover:bg-slate-400 cursor-col-resize"
+              className="absolute inset-y-0 left-1/2 flex w-8 -translate-x-1/2 cursor-col-resize touch-none select-none justify-center"
               title={t('editor.resizePanel')}
-            />
+            >
+              <div className="h-full w-1.5 rounded-full bg-slate-300 hover:bg-slate-400" />
+            </div>
           )}
+          <button
+            type="button"
+            onClick={() => setIsTaskPanelCollapsed((v) => !v)}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="absolute left-1/2 top-1/2 z-10 flex h-14 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-slate-200 bg-white text-slate-600 shadow-md transition-colors hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+            title={isTaskPanelCollapsed ? t('editor.expandPanel') : t('editor.collapsePanel')}
+            aria-expanded={!isTaskPanelCollapsed}
+            aria-label={isTaskPanelCollapsed ? t('editor.expandPanel') : t('editor.collapsePanel')}
+          >
+            {isTaskPanelCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
+          </button>
         </div>
 
         {/* Right: Gantt Visualization */}

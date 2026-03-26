@@ -91,8 +91,8 @@ const App = () => {
         {/* Sidebar - Hidden on Auth Page */}
         {user && <aside className="w-64 bg-slate-900 flex flex-col shrink-0 text-slate-300">
           <div className="p-6 flex items-center gap-3 border-b border-slate-800">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-slate-800 overflow-hidden">
-              <BrandLogo variant="mark" size={28} title={t('common.appName')} />
+            <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center border border-slate-800 overflow-hidden">
+              <BrandLogo variant="mark" size={40} title={t('common.appName')} />
             </div>
             <h1 className="font-bold text-lg tracking-tight text-white">{t('common.appName')}</h1>
           </div>

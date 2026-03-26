@@ -65,8 +65,8 @@ const Landing = () => {
       <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-slate-200 overflow-hidden">
-              <BrandLogo variant="mark" size={28} title={t('common.appName')} />
+            <div className="w-10 h-10 bg-transparent rounded-xl flex items-center justify-center border border-slate-200 overflow-hidden">
+              <BrandLogo variant="mark" size={40} title={t('common.appName')} />
             </div>
             <div className="font-black tracking-tight">{t('common.appName')}</div>
           </div>

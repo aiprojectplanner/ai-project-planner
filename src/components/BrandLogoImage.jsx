@@ -1,12 +1,15 @@
 import React from 'react'
 
-import brandLogoFull from '../assets/brand-logo-full.png'
+// Use a versioned filename to avoid stale browser/Vite caching.
+import brandLogoFull from '../assets/brand-logo-full-v2.png'
 
 /**
  * Website logo component based on a single provided PNG.
  *
- * Note: the PNG already contains text; in `mark` mode we crop the left part
- * (icon area) by using `objectFit: cover` + `objectPosition: left center`.
+ * Requirements:
+ * - Do not scale the logo content (keep the PNG's intrinsic size).
+ * - Center the logo inside its square container.
+ * - Fill any unused space with white so the rounded outer container looks seamless.
  */
 const BrandLogoImage = ({
   variant = 'mark', // 'mark' | 'full'
@@ -14,32 +17,34 @@ const BrandLogoImage = ({
   className = '',
   title = 'AI Project Planner'
 }) => {
-  if (variant === 'full') {
-    return (
-      <img
-        src={brandLogoFull}
-        alt={title}
-        draggable={false}
-        className={className}
-        style={{ height: size, width: 'auto', display: 'block' }}
-      />
-    )
-  }
-
   return (
-    <img
-      src={brandLogoFull}
-      alt={title}
-      draggable={false}
+    <div
       className={className}
       style={{
         width: size,
         height: size,
-        objectFit: 'cover',
-        objectPosition: 'left center',
-        display: 'block'
+        position: 'relative',
+        backgroundColor: '#ffffff',
+        overflow: 'hidden',
+        display: 'flex',
       }}
-    />
+      data-variant={variant}
+    >
+      <img
+        src={brandLogoFull}
+        alt={title}
+        draggable={false}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain', // 保证完整不裁切（图片是正方形时也不会只显示一部分）
+          objectPosition: 'center',
+          display: 'block',
+          userSelect: 'none',
+          pointerEvents: 'none',
+        }}
+      />
+    </div>
   )
 }
 

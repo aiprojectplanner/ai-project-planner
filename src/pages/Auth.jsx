@@ -45,8 +45,8 @@ const Auth = () => {
       <div className="max-w-md w-full">
         <div className="bg-white p-10 rounded-[40px] border border-slate-200 shadow-2xl shadow-slate-100">
           <div className="text-center mb-10">
-            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 border border-slate-200 overflow-hidden">
-              <BrandLogo variant="mark" size={46} title={t('common.appName')} />
+            <div className="w-16 h-16 bg-transparent rounded-2xl flex items-center justify-center mx-auto mb-6 border border-slate-200 overflow-hidden">
+              <BrandLogo variant="mark" size={64} title={t('common.appName')} />
             </div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
               {isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
