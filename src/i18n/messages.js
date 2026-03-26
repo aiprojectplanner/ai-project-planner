@@ -15,14 +15,14 @@ export const messages = {
       dashboard: 'Dashboard',
       editor: 'Project Editor',
       aiPlanner: 'AI Planner',
-      pricing: 'Pricing',
+      pricing: 'Try Pro',
       analytics: 'Analytics',
     },
     header: {
       dashboard: 'Dashboard',
       editor: 'Project Editor',
       aiPlanner: 'AI Planner',
-      pricing: 'Pricing',
+      pricing: 'Try Pro',
       signOut: 'Sign Out',
     },
     editor: {
@@ -119,7 +119,7 @@ export const messages = {
       genericError: 'Failed to generate project plan.',
     },
     pricing: {
-      title: 'Pricing',
+      title: 'Try Pro',
       currentPlan: 'Current plan:',
       free: 'Free',
       pro: 'Pro',
@@ -219,14 +219,14 @@ export const messages = {
       dashboard: '工作台',
       editor: '项目编辑',
       aiPlanner: 'AI 规划',
-      pricing: '定价',
+      pricing: '试用 Pro',
       analytics: '分析',
     },
     header: {
       dashboard: '工作台',
       editor: '项目编辑',
       aiPlanner: 'AI 规划',
-      pricing: '定价',
+      pricing: '试用 Pro',
       signOut: '退出登录',
     },
     editor: {
@@ -321,7 +321,7 @@ export const messages = {
       genericError: '生成项目计划失败。',
     },
     pricing: {
-      title: '定价',
+      title: '试用 Pro',
       currentPlan: '当前方案：',
       free: '免费',
       pro: '专业版',
