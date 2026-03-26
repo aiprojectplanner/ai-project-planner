@@ -381,7 +381,16 @@ const ProjectEditor = () => {
               <table className="w-full text-left border-collapse table-fixed">
                 <thead className="bg-slate-50 sticky top-0 z-10 border-b border-slate-200">
                   <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    <th className="py-3 px-1 w-8 text-center" aria-hidden />
+                    <th className="py-3 px-1 w-8 text-center" aria-hidden>
+                      <button
+                        type="button"
+                        onClick={() => insertTaskAt(0)}
+                        className="inline-flex text-indigo-500 hover:text-indigo-700"
+                        title={t('editor.insertTaskAtTop')}
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </th>
                     <th className="py-3 px-1 w-8 text-center">{t('editor.colNumber')}</th>
                     <th className="py-3 px-1 w-8 text-center" aria-hidden />
                     <th className="py-3 px-2 min-w-0">{t('editor.colTaskName')}</th>
@@ -392,17 +401,6 @@ const ProjectEditor = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="bg-slate-50/60 border-b border-slate-100">
-                    <td colSpan={8} className="py-2 px-2">
-                      <button
-                        type="button"
-                        onClick={() => insertTaskAt(0)}
-                        className="inline-flex items-center gap-2 text-[11px] font-black text-indigo-600 hover:text-indigo-700"
-                      >
-                        <Plus size={14} /> {t('editor.insertTaskAtTop')}
-                      </button>
-                    </td>
-                  </tr>
                   {tasks.map((task, index) => {
                     const dur = calculateDuration(task.start, task.end)
                     return (
