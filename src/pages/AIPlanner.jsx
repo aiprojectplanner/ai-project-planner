@@ -31,7 +31,7 @@ const AIPlanner = () => {
   const [customMonths, setCustomMonths] = useState(12) // 1..18
 
   const [granularityMode, setGranularityMode] = useState('coarse') // coarse | fine | custom
-  const [customTaskCount, setCustomTaskCount] = useState(15) // 3..30 (Pro custom)
+  const [customTaskCount, setCustomTaskCount] = useState(15) // 1..30 (Pro custom)
 
   const [projectStartDate, setProjectStartDate] = useState(todayIsoDate)
 
@@ -88,7 +88,7 @@ const AIPlanner = () => {
     customMonths: isPro && durationMode === 'custom' ? clampInt(customMonths, 1, 18) : undefined,
     granularityMode,
     customTaskCount:
-      isPro && granularityMode === 'custom' ? clampInt(customTaskCount, 3, 30) : undefined,
+      isPro && granularityMode === 'custom' ? clampInt(customTaskCount, 1, 30) : undefined,
     projectStartDate
   })
 
@@ -305,7 +305,7 @@ const AIPlanner = () => {
                       <input
                         type="number"
                         value={customTaskCount}
-                        min={3}
+                        min={1}
                         max={30}
                         onChange={(e) => setCustomTaskCount(e.target.value)}
                         className="w-full mt-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500"

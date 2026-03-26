@@ -52,8 +52,10 @@ const ProjectEditor = () => {
     const endCandidates = [new Date(projectEndDate), ...taskEnds]
     const minStart = new Date(Math.min(...startCandidates.map((d) => d.getTime())))
     const maxEnd = new Date(Math.max(...endCandidates.map((d) => d.getTime())))
+    // Add right-side buffer so the final bar isn't flush to the screen edge.
+    const bufferDays = 7
     const spanDaysRaw = Math.ceil((maxEnd - minStart) / (1000 * 60 * 60 * 24))
-    const spanDays = Math.max(7, spanDaysRaw)
+    const spanDays = Math.max(7, spanDaysRaw + bufferDays)
     const weeks = Math.max(1, Math.ceil(spanDays / 7))
 
     return { minStart, spanDays, weeks }
@@ -222,11 +224,11 @@ const ProjectEditor = () => {
       '',
       '## Tasks',
       '',
-      '| # | Task | Start | End | Duration (days) | Dependency |',
-      '|---|------|-------|-----|------------------|------------|',
+      '| # | Task | Start | End | Duration (days) |',
+      '|---|------|-------|-----|------------------|',
       ...tasks.map((task, idx) => {
         const duration = calculateDuration(task.start, task.end)
-        return `| ${idx + 1} | ${task.name} | ${task.start} | ${task.end} | ${duration} | ${task.dep || '-'} |`
+        return `| ${idx + 1} | ${task.name} | ${task.start} | ${task.end} | ${duration} |`
       })
     ]
     const filename = `${makeSafeFilename(projectTitle, 'project')}.md`
@@ -310,7 +312,6 @@ const ProjectEditor = () => {
                 <th className="py-3 px-2 w-32">{t('editor.colStart')}</th>
                 <th className="py-3 px-2 w-32">{t('editor.colEnd')}</th>
                 <th className="py-3 px-2 w-20 text-center">{t('editor.colDur')}</th>
-                <th className="py-3 px-2 w-20 text-center">{t('editor.colDep')}</th>
                 <th className="py-3 px-2 w-12 text-center"></th>
               </tr>
             </thead>
@@ -345,15 +346,6 @@ const ProjectEditor = () => {
                       />
                     </td>
                     <td className="px-2 text-center text-[11px] font-bold text-slate-400">{dur}d</td>
-                    <td className="px-2 text-center">
-                      <input 
-                        type="text" 
-                        value={task.dep} 
-                        onChange={(e) => updateTask(task.id, 'dep', e.target.value)}
-                        placeholder="-"
-                        className="w-full bg-transparent text-xs font-semibold text-center text-indigo-500 focus:outline-2 focus:outline-indigo-500 focus:bg-white rounded"
-                      />
-                    </td>
                     <td className="px-2 text-center">
                       <button 
                         onClick={() => deleteTask(task.id)}

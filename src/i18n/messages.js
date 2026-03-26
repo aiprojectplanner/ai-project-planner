@@ -95,7 +95,7 @@ export const messages = {
         'We generate within your selected duration (up to 18 months). Task count follows your granularity (custom up to 30 tasks on Pro). The Gantt anchors on your project start date.',
       freeTierNote:
         'Free plan: choose preset duration and preset task granularity only. Upgrade to Pro for custom months and custom task count.',
-      proCustomHint: 'Pro: you can set custom project length (months) and custom number of tasks (3–30).',
+      proCustomHint: 'Pro: you can set custom project length (months) and custom number of tasks (1–30).',
       projectStartLabel: 'Project start date',
       durationLabel: 'Expected project duration',
       duration: {
@@ -108,7 +108,7 @@ export const messages = {
       granularity: {
         coarse: 'Coarse (<10 tasks)',
         fine: 'Fine (<20 tasks)',
-        custom: 'Custom task count (3–30)',
+        custom: 'Custom task count (1–30)',
       },
       templateLabel: 'Template',
       template: {
@@ -297,7 +297,7 @@ export const messages = {
         '生成时长不超过你选择的范围（最长 18 个月）；任务数量按粒度设置（Pro 自定义最多 30 个）。甘特图会以你指定的项目开始日为起点。',
       freeTierNote:
         '免费版：仅能选择预设的项目时长与预设任务粒度。升级 Pro 后可自定义月数与任务数量。',
-      proCustomHint: 'Pro：可自定义项目时长（月）与任务数量（3–30）。',
+      proCustomHint: 'Pro：可自定义项目时长（月）与任务数量（1–30）。',
       projectStartLabel: '项目开始日期',
       durationLabel: '预期项目时长',
       duration: {
@@ -310,7 +310,7 @@ export const messages = {
       granularity: {
         coarse: '粗粒度（<10 个任务）',
         fine: '细粒度（<20 个任务）',
-        custom: '自定义任务数量（3–30）',
+        custom: '自定义任务数量（1–30）',
       },
       templateLabel: '模版',
       template: {

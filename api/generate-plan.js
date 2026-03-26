@@ -159,7 +159,7 @@ function resolveGenerationConstraints(constraints, planTier) {
 
   let maxTasks
   if (granularityMode === 'custom') {
-    maxTasks = clampInt(constraints?.customTaskCount ?? 10, 3, MAX_TASKS_CAP)
+    maxTasks = clampInt(constraints?.customTaskCount ?? 10, 1, MAX_TASKS_CAP)
   } else {
     maxTasks = PRESET_TASKS[granularityMode] ?? 9
   }
