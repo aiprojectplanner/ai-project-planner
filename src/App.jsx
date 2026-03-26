@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom'
-import { LayoutDashboard, GanttChart, Wand2, BarChart, Bell, LogOut, Loader2, CreditCard } from 'lucide-react'
+import { LayoutDashboard, GanttChart, Wand2, BarChart, Bell, LogOut, Loader2, CreditCard, CalendarDays } from 'lucide-react'
 
 import Dashboard from './pages/Dashboard'
 import ProjectEditor from './pages/ProjectEditor'
 import AIPlanner from './pages/AIPlanner'
+import Calendar from './pages/Calendar'
 import Landing from './pages/Landing'
 import Pricing from './pages/Pricing'
 import Auth from './pages/Auth'
@@ -45,6 +46,8 @@ const PageHeader = () => {
         return t('header.editor')
       case '/ai-planner':
         return t('header.aiPlanner')
+      case '/calendar':
+        return t('header.calendar')
       case '/pricing':
         return t('header.pricing')
       default:
@@ -110,6 +113,10 @@ const App = () => {
               <Wand2 size={20} className="text-slate-500 group-[.active]:text-indigo-400" />
               <span className="font-medium text-sm">{t('nav.aiPlanner')}</span>
             </NavLink>
+            <NavLink to="/calendar" className={({ isActive }) => `nav-item group ${isActive ? 'active' : ''}`}>
+              <CalendarDays size={20} className="text-slate-500 group-[.active]:text-indigo-400" />
+              <span className="font-medium text-sm">{t('nav.calendar')}</span>
+            </NavLink>
             <NavLink to="/pricing" className={({ isActive }) => `nav-item group ${isActive ? 'active' : ''}`}>
               <CreditCard size={20} className="text-slate-500 group-[.active]:text-indigo-400" />
               <span className="font-medium text-sm">{t('nav.pricing')}</span>
@@ -149,6 +156,7 @@ const App = () => {
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/editor" element={<ProtectedRoute><ProjectEditor /></ProtectedRoute>} />
               <Route path="/ai-planner" element={<ProtectedRoute><AIPlanner /></ProtectedRoute>} />
+              <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
               <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
             </Routes>
           </div>
