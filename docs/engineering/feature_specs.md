@@ -4,7 +4,7 @@
 - **How it works**: Non-authenticated visitors see a 5-section landing page at `/` (Hero, Problem, Solution, Demo, CTA) with interactive demo playback and auth CTA buttons.
 
 ## 1. AI Project Generator 
-- **How it works**: Users enter an idea, the frontend sends it to `/api/generate-plan`, which calls OpenRouter with one or more LLMs (priority list from `OPENROUTER_MODELS` / `OPENROUTER_MODEL`), receives JSON, and the editor renders a Gantt chart. 
+- **How it works**: Users enter an idea and quality controls (template, start date, duration, granularity). The frontend sends them to `/api/generate-plan`, which resolves Free vs Pro rules server-side, calls OpenRouter with one or more LLMs (priority list from `OPENROUTER_MODELS` / `OPENROUTER_MODEL`), receives JSON, and the editor renders a Gantt chart anchored on the chosen start date. See `docs/specs/ai_planner.md`.
  
  ## 2. Project Editor 
  - **How it works**: A manual interface to add, edit, or delete tasks. Changes can be saved to Supabase. 

@@ -112,13 +112,15 @@ Evidence:
 - Strategy: `docs/strategy/PRODUCT_SCOPE.md` defines Free vs Pro and the 3-project limit.
 - Code: `src/pages/Dashboard.jsx` (UI gating) and `src/store/projectStore.js` (insert-time limit check).
 
-### Pro Gating for AI Generation (server enforced)
-- Strategy states AI generation is Pro-only.
-- Server implementation gates `POST /api/generate-plan` with bearer auth + `profiles.plan_tier === 'pro'`.
+### AI Generation: Free vs Pro (server enforced)
+- Authenticated users may call `POST /api/generate-plan`.
+- **Free**: preset project duration and preset task granularity only (no custom months or custom task count).
+- **Pro**: may additionally use custom months (1–18) and custom task count (3–30).
+- Server reads `profiles.plan_tier` and rejects disallowed combinations with `403`.
 
 Evidence:
-- Strategy: `docs/strategy/PRODUCT_SCOPE.md` (AI generation not included in Free tier).
-- Code: `api/generate-plan.js` validates auth token and checks `profiles.plan_tier`.
+- Code: `api/generate-plan.js` (`authenticateUser`, `resolveGenerationConstraints`), `src/pages/AIPlanner.jsx`.
+- Spec: `docs/specs/ai_planner.md`.
 
 ## Not Yet Implemented
 Referenced in strategy/roadmap but not present in current implementation:

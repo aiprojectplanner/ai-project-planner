@@ -114,26 +114,34 @@ const useProjectStore = create((set, get) => ({
     tasks: state.tasks.filter(t => t.id !== id)
   })),
   importPlan: (plan) => set((state) => {
-    // Convert AI plan to our internal format
+    const anchorStr =
+      typeof plan.projectStartDate === 'string' && plan.projectStartDate.trim()
+        ? plan.projectStartDate.trim()
+        : state.projectStartDate
+    // Convert AI plan to our internal format (timeline uses week indices from model output)
     const tasks = plan.timeline.map((item, index) => {
-      const start = new Date(state.projectStartDate)
+      const start = new Date(`${anchorStr}T12:00:00`)
       start.setDate(start.getDate() + (item.start * 7)) // item.start is in weeks
-      
+
       const end = new Date(start)
       end.setDate(end.getDate() + (item.duration * 7))
-      
+
       return {
         id: index + 1,
         name: item.task,
         start: start.toISOString().split('T')[0],
         end: end.toISOString().split('T')[0],
-        dep: ""
+        dep: ''
       }
     })
-    
+
+    const lastEnd = tasks.length ? tasks[tasks.length - 1].end : anchorStr
+
     return {
       projectTitle: plan.projectTitle || state.projectTitle,
-      tasks: tasks
+      projectStartDate: anchorStr,
+      projectEndDate: lastEnd,
+      tasks
     }
   })
 }))

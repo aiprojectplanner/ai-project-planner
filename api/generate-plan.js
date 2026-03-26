@@ -40,12 +40,14 @@ function monthsToWeeks(months) {
   return Math.max(1, Math.floor(m * WEEKS_PER_MONTH))
 }
 
+const MAX_TASKS_CAP = 30
+
 function normalizeGeneratedPlan(parsed, constraints) {
   const maxTotalWeeks =
     constraints?.expectedTotalMonths != null
       ? monthsToWeeks(constraints.expectedTotalMonths)
       : clampInt(constraints?.expectedTotalWeeks ?? monthsToWeeks(12), 1, MAX_TOTAL_WEEKS)
-  const maxTasks = clampInt(constraints?.maxTasks ?? 9, 1, 19)
+  const maxTasks = clampInt(constraints?.maxTasks ?? 9, 1, MAX_TASKS_CAP)
   const maxTaskDurationWeeks = 6
   const maxTaskNameLen = 48
 
@@ -112,7 +114,60 @@ async function callOpenRouter({ apiKey, model, prompt }) {
   return { response, data }
 }
 
-async function authenticateAndAuthorizeProUser(req) {
+function normalizeTemplateKey(key) {
+  if (key === 'ecom') return 'commercial'
+  if (key === 'saas') return 'software'
+  if (key === 'commercial' || key === 'software' || key === 'other') return key
+  return 'other'
+}
+
+const PRESET_MONTHS = { lt6: 6, mid: 12, high: 18 }
+const PRESET_TASKS = { coarse: 9, fine: 19 }
+
+/**
+ * Free: preset duration + preset granularity only (no custom months / custom task count).
+ * Pro: may use custom months (1–18) and custom task count (3–30).
+ */
+function resolveGenerationConstraints(constraints, planTier) {
+  const isPro = planTier === 'pro'
+  const durationMode = ['lt6', 'mid', 'high', 'custom'].includes(constraints?.durationMode)
+    ? constraints.durationMode
+    : 'mid'
+  const granularityMode = ['coarse', 'fine', 'custom'].includes(constraints?.granularityMode)
+    ? constraints.granularityMode
+    : 'coarse'
+
+  if (!isPro && (durationMode === 'custom' || granularityMode === 'custom')) {
+    return {
+      error: {
+        status: 403,
+        body: {
+          error: 'Upgrade required',
+          message:
+            'Custom project duration and custom task count are available on Pro. Choose preset options or upgrade your plan.',
+        },
+      },
+    }
+  }
+
+  let expectedTotalMonths
+  if (durationMode === 'custom') {
+    expectedTotalMonths = clampInt(constraints?.customMonths ?? 12, 1, MAX_PROJECT_MONTHS)
+  } else {
+    expectedTotalMonths = PRESET_MONTHS[durationMode] ?? 12
+  }
+
+  let maxTasks
+  if (granularityMode === 'custom') {
+    maxTasks = clampInt(constraints?.customTaskCount ?? 10, 3, MAX_TASKS_CAP)
+  } else {
+    maxTasks = PRESET_TASKS[granularityMode] ?? 9
+  }
+
+  return { expectedTotalMonths, maxTasks }
+}
+
+async function authenticateUser(req) {
   const authHeader = req.headers?.authorization || req.headers?.Authorization || ''
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : ''
   if (!token) {
@@ -152,23 +207,9 @@ async function authenticateAndAuthorizeProUser(req) {
     .eq('id', user.id)
     .single()
 
-  if (profileError || !profile) {
-    return {
-      ok: false,
-      status: 403,
-      body: { error: 'Pro Plan Required', message: 'Plan profile not found for current user.' },
-    }
-  }
+  const planTier = !profileError && profile?.plan_tier === 'pro' ? 'pro' : 'free'
 
-  if (profile.plan_tier !== 'pro') {
-    return {
-      ok: false,
-      status: 403,
-      body: { error: 'Pro Plan Required', message: 'AI Planner is available for Pro users only.' },
-    }
-  }
-
-  return { ok: true, user, profile }
+  return { ok: true, user, profile, planTier }
 }
 
 export default async function handler(req, res) {
@@ -190,10 +231,17 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Project idea is required" });
     }
 
-    const authz = await authenticateAndAuthorizeProUser(req)
+    const authz = await authenticateUser(req)
     if (!authz.ok) {
       return res.status(authz.status).json(authz.body)
     }
+
+    const resolved = resolveGenerationConstraints(constraints, authz.planTier)
+    if (resolved.error) {
+      return res.status(resolved.error.status).json(resolved.error.body)
+    }
+
+    const { expectedTotalMonths: resolvedMonths, maxTasks: resolvedMaxTasks } = resolved
 
     // Strict API key validation.
     const apiKey = process.env.OPENROUTER_API_KEY;
@@ -207,27 +255,33 @@ export default async function handler(req, res) {
 
     console.log("API Key found (length):", apiKey.length);
 
-    const maxTotalMonths =
-      constraints?.expectedTotalMonths != null
-        ? clampInt(constraints.expectedTotalMonths, 1, MAX_PROJECT_MONTHS)
-        : clampInt(Math.round((constraints?.expectedTotalWeeks ?? monthsToWeeks(12)) / WEEKS_PER_MONTH), 1, MAX_PROJECT_MONTHS)
-
+    const maxTotalMonths = resolvedMonths
     const maxTotalWeeks = monthsToWeeks(maxTotalMonths)
-    const maxTasks = clampInt(constraints?.maxTasks ?? 9, 1, 19)
-    const templateKey = constraints?.templateKey || 'other'
+    const maxTasks = resolvedMaxTasks
+    const templateKey = normalizeTemplateKey(constraints?.templateKey)
 
     const templateHint =
-      templateKey === 'ecom'
+      templateKey === 'commercial'
         ? 'Template: E-commerce. Focus on store foundation, product discovery, checkout flow, marketing/ads, and conversion tracking.'
-        : templateKey === 'saas'
-          ? 'Template: SaaS software. Focus on MVP definition, user onboarding, core feature roadmap, infrastructure, and QA/testing.'
+        : templateKey === 'software'
+          ? 'Template: Software product. Focus on MVP definition, architecture, implementation phases, infrastructure, and QA/testing.'
           : 'Template: Other. Focus on clear MVP scope, implementation phases, testing/QA, and a deliverable roadmap.'
+
+    const projectStartDate =
+      typeof constraints?.projectStartDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(constraints.projectStartDate.trim())
+        ? constraints.projectStartDate.trim()
+        : null
+    const startDateHint = projectStartDate
+      ? `The user selected this project start date (for context): ${projectStartDate}.`
+      : ''
 
     const prompt = `
 You are an AI project planning assistant.
 
 Task: Create a structured project plan for the user idea:
 "${idea}"
+
+${startDateHint}
 
 Quality constraints (must follow):
 - Output MUST be JSON only (no markdown, no extra text).
