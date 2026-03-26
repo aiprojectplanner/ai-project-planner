@@ -1,10 +1,13 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, Plus, Save, Trash2, Loader2, CheckCircle, Download, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ArrowLeft, GripVertical, Plus, Save, Trash2, Loader2, CheckCircle, Download, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useProjectStore from '../store/projectStore'
 import useAuthStore from '../store/authStore'
+import { supabase } from '../lib/supabaseClient'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import { useI18n } from '../i18n/useI18n'
+
+const todayIsoDate = () => new Date().toISOString().split('T')[0]
 
 const ProjectEditor = () => {
   const navigate = useNavigate()
@@ -18,19 +21,79 @@ const ProjectEditor = () => {
   const workspaceRef = useRef(null)
   const ganttRef = useRef(null)
   const [dragState, setDragState] = useState(null)
+  const [projects, setProjects] = useState([])
+  const [projectsLoading, setProjectsLoading] = useState(false)
 
-  const { 
-    projectTitle, 
-    projectStartDate, 
+  const {
+    projectId,
+    projectTitle,
+    projectStartDate,
     projectEndDate,
-    totalDays, 
-    tasks, 
-    setProjectTitle, 
-    addTask, 
-    updateTask, 
+    totalDays,
+    tasks,
+    setProjectTitle,
+    loadProject,
+    insertTaskAt,
+    reorderTasks,
+    updateTask,
     deleteTask,
     saveProject
   } = useProjectStore()
+
+  const fetchProjects = useCallback(async () => {
+    if (!user) return
+    setProjectsLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, title, tasks')
+        .order('created_at', { ascending: false })
+      if (!error) setProjects(data || [])
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setProjectsLoading(false)
+    }
+  }, [user])
+
+  useEffect(() => {
+    fetchProjects()
+  }, [fetchProjects])
+
+  const handleProjectChange = (e) => {
+    const id = e.target.value
+    if (!id) {
+      const t = todayIsoDate()
+      useProjectStore.setState({
+        projectId: null,
+        projectTitle: 'New Project',
+        tasks: [],
+        projectStartDate: t,
+        projectEndDate: t
+      })
+      return
+    }
+    const p = projects.find((x) => String(x.id) === String(id))
+    if (p) loadProject(p)
+  }
+
+  const handleRowDragStart = (e, index) => {
+    e.dataTransfer.setData('text/plain', String(index))
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleRowDragOver = (e) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleRowDrop = (e, dropIndex) => {
+    e.preventDefault()
+    const from = Number.parseInt(e.dataTransfer.getData('text/plain'), 10)
+    if (Number.isNaN(from)) return
+    if (from === dropIndex) return
+    reorderTasks(from, dropIndex)
+  }
 
   const calculateDuration = (start, end) => {
     const s = new Date(start)
@@ -177,6 +240,7 @@ const ProjectEditor = () => {
 
     try {
       await saveProject(user.id)
+      await fetchProjects()
       setSaveStatus('success')
       setTimeout(() => setSaveStatus(null), 3000)
     } catch (error) {
@@ -241,18 +305,33 @@ const ProjectEditor = () => {
     <div className="min-h-screen flex flex-col bg-slate-50">
       {/* Editor Header */}
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 sticky top-0 z-50">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <button 
             onClick={() => navigate('/dashboard')} 
-            className="text-slate-400 hover:text-slate-600 transition-all p-2 hover:bg-slate-50 rounded-lg"
+            className="text-slate-400 hover:text-slate-600 transition-all p-2 hover:bg-slate-50 rounded-lg shrink-0"
           >
             <ArrowLeft size={20} />
           </button>
+          <label className="sr-only" htmlFor="project-select">{t('editor.projectSelectLabel')}</label>
+          <select
+            id="project-select"
+            value={projectId ?? ''}
+            onChange={handleProjectChange}
+            disabled={projectsLoading || !user}
+            className="max-w-[200px] shrink-0 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500"
+          >
+            <option value="">{t('editor.unsavedProject')}</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title || 'Untitled'}
+              </option>
+            ))}
+          </select>
           <input 
             type="text" 
             value={projectTitle} 
             onChange={(e) => setProjectTitle(e.target.value)}
-            className="text-xl font-black text-slate-800 border-none outline-none focus:ring-2 focus:ring-indigo-100 px-2 rounded-lg bg-transparent hover:bg-slate-50 transition-colors"
+            className="min-w-0 flex-1 text-xl font-black text-slate-800 border-none outline-none focus:ring-2 focus:ring-indigo-100 px-2 rounded-lg bg-transparent hover:bg-slate-50 transition-colors"
           />
         </div>
         <div className="flex items-center gap-3 flex-wrap justify-end">
@@ -302,23 +381,58 @@ const ProjectEditor = () => {
               <table className="w-full text-left border-collapse table-fixed">
                 <thead className="bg-slate-50 sticky top-0 z-10 border-b border-slate-200">
                   <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    <th className="py-3 px-4 w-10">{t('editor.colNumber')}</th>
-                    <th className="py-3 px-2 w-40">{t('editor.colTaskName')}</th>
-                    <th className="py-3 px-2 w-32">{t('editor.colStart')}</th>
-                    <th className="py-3 px-2 w-32">{t('editor.colEnd')}</th>
-                    <th className="py-3 px-2 w-20 text-center">{t('editor.colDur')}</th>
-                    <th className="py-3 px-2 w-12 text-center"></th>
+                    <th className="py-3 px-1 w-8 text-center" aria-hidden />
+                    <th className="py-3 px-1 w-8 text-center">{t('editor.colNumber')}</th>
+                    <th className="py-3 px-1 w-8 text-center" aria-hidden />
+                    <th className="py-3 px-2 min-w-0">{t('editor.colTaskName')}</th>
+                    <th className="py-3 px-2 w-28">{t('editor.colStart')}</th>
+                    <th className="py-3 px-2 w-28">{t('editor.colEnd')}</th>
+                    <th className="py-3 px-2 w-14 text-center">{t('editor.colDur')}</th>
+                    <th className="py-3 px-2 w-10 text-center" />
                   </tr>
                 </thead>
                 <tbody>
-                  {tasks.map((task) => {
+                  <tr className="bg-slate-50/60 border-b border-slate-100">
+                    <td colSpan={8} className="py-2 px-2">
+                      <button
+                        type="button"
+                        onClick={() => insertTaskAt(0)}
+                        className="inline-flex items-center gap-2 text-[11px] font-black text-indigo-600 hover:text-indigo-700"
+                      >
+                        <Plus size={14} /> {t('editor.insertTaskAtTop')}
+                      </button>
+                    </td>
+                  </tr>
+                  {tasks.map((task, index) => {
                     const dur = calculateDuration(task.start, task.end)
                     return (
                       <tr
                         key={task.id}
-                        className="h-10 border-bottom border-slate-100 group hover:bg-slate-50/50 transition-all"
+                        onDragOver={handleRowDragOver}
+                        onDrop={(e) => handleRowDrop(e, index)}
+                        className="h-10 border-b border-slate-100 group hover:bg-slate-50/50 transition-all"
                       >
-                        <td className="px-4 text-[10px] font-black text-slate-300">{task.id}</td>
+                        <td className="px-1 text-center align-middle">
+                          <div
+                            draggable
+                            onDragStart={(e) => handleRowDragStart(e, index)}
+                            className="inline-flex cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500"
+                            title={t('editor.dragReorderRow')}
+                          >
+                            <GripVertical size={14} />
+                          </div>
+                        </td>
+                        <td className="px-1 text-center text-[10px] font-black text-slate-300 align-middle">{index + 1}</td>
+                        <td className="px-1 text-center align-middle">
+                          <button
+                            type="button"
+                            onClick={() => insertTaskAt(index + 1)}
+                            className="inline-flex text-indigo-500 hover:text-indigo-700"
+                            title={t('editor.insertTaskAfter')}
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </td>
                         <td className="px-2">
                           <input
                             type="text"
@@ -346,6 +460,7 @@ const ProjectEditor = () => {
                         <td className="px-2 text-center text-[11px] font-bold text-slate-400">{dur}d</td>
                         <td className="px-2 text-center">
                           <button
+                            type="button"
                             onClick={() => deleteTask(task.id)}
                             className="text-slate-300 hover:text-red-500 transition-colors"
                           >
@@ -358,17 +473,7 @@ const ProjectEditor = () => {
                 </tbody>
               </table>
             </div>
-
-            <div className="p-4 border-t border-slate-200 bg-white">
-              <button
-                type="button"
-                onClick={addTask}
-                className="w-full bg-indigo-600 text-white px-4 py-3 rounded-2xl text-sm font-black hover:bg-indigo-500 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
-              >
-                <Plus size={18} /> {t('editor.addTask')}
-              </button>
-            </div>
-        </div>
+          </div>
         )}
 
         {/* Splitter: full-height resize track + collapse toggle centered on the divider */}

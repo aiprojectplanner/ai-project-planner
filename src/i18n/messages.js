@@ -28,6 +28,11 @@ export const messages = {
     editor: {
       saved: 'Saved',
       errorSaving: 'Error saving',
+      unsavedProject: 'New / unsaved',
+      projectSelectLabel: 'Project',
+      insertTaskAtTop: 'Insert task at top',
+      insertTaskAfter: 'Insert task below',
+      dragReorderRow: 'Drag to reorder',
       addTask: 'Add Task',
       exportJson: 'Export JSON',
       exportMd: 'Export MD',
@@ -232,6 +237,11 @@ export const messages = {
     editor: {
       saved: '已保存',
       errorSaving: '保存失败',
+      unsavedProject: '新建 / 未保存',
+      projectSelectLabel: '项目',
+      insertTaskAtTop: '在顶部插入任务',
+      insertTaskAfter: '在下方插入任务',
+      dragReorderRow: '拖动排序',
       addTask: '添加任务',
       exportJson: '导出 JSON',
       exportMd: '导出 Markdown',
