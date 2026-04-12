@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabaseClient'
 
-const FREE_PLAN_MAX_PROJECTS = 3
+export const FREE_PLAN_MAX_PROJECTS = 3
 
 const addDays = (dateStr, days) => {
   const d = new Date(`${dateStr}T12:00:00`)
@@ -103,14 +103,24 @@ const useProjectStore = create((set, get) => ({
         .eq('id', projectId)
         .select()
     } else {
-      const { count, error: countError } = await supabase
-        .from('projects')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', userId)
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('plan_tier')
+        .eq('id', userId)
+        .single()
 
-      if (countError) throw countError
-      if ((count || 0) >= FREE_PLAN_MAX_PROJECTS) {
-        throw new Error('Project limit reached (Free Plan). Upgrade to Pro!')
+      const isPro = !profileError && profile?.plan_tier === 'pro'
+
+      if (!isPro) {
+        const { count, error: countError } = await supabase
+          .from('projects')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+
+        if (countError) throw countError
+        if ((count || 0) >= FREE_PLAN_MAX_PROJECTS) {
+          throw new Error('Project limit reached (Free Plan). Upgrade to Pro!')
+        }
       }
 
       result = await supabase

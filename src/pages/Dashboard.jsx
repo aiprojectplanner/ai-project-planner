@@ -3,7 +3,7 @@ import { Plus, Clock, CheckCircle2, Loader2, Trash2, Pencil, Check, X } from 'lu
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import useAuthStore from '../store/authStore'
-import useProjectStore from '../store/projectStore'
+import useProjectStore, { FREE_PLAN_MAX_PROJECTS } from '../store/projectStore'
 import { useI18n } from '../i18n/useI18n'
 import BrandLogo from '../components/BrandLogoImage'
 
@@ -16,8 +16,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true)
   const [editingProjectId, setEditingProjectId] = useState(null)
   const [editingTitle, setEditingTitle] = useState('')
-
-  const maxProjects = 3
+  const [planTier, setPlanTier] = useState('free')
 
   useEffect(() => {
     if (user) {
@@ -27,13 +26,21 @@ const Dashboard = () => {
 
   const fetchProjects = async () => {
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false })
-      
-      if (error) throw error
-      setProjects(data || [])
+      const [{ data: projectRows, error: projectsError }, { data: profile, error: profileError }] =
+        await Promise.all([
+          supabase.from('projects').select('*').order('created_at', { ascending: false }),
+          supabase.from('profiles').select('plan_tier').eq('id', user.id).single()
+        ])
+
+      if (projectsError) throw projectsError
+
+      setProjects(projectRows || [])
+      if (profileError) {
+        console.warn('Error fetching profile plan:', profileError)
+        setPlanTier('free')
+      } else {
+        setPlanTier(profile?.plan_tier === 'pro' ? 'pro' : 'free')
+      }
     } catch (error) {
       console.error('Error fetching projects:', error)
     } finally {
@@ -47,7 +54,8 @@ const Dashboard = () => {
   }
 
   const createNewProject = () => {
-    if (projects.length >= maxProjects) {
+    const atFreeLimit = planTier !== 'pro' && projects.length >= FREE_PLAN_MAX_PROJECTS
+    if (atFreeLimit) {
       alert(t('dashboard.limitAlert'))
     } else {
       // Clear current project state before navigating to editor
@@ -120,7 +128,12 @@ const Dashboard = () => {
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t('dashboard.title')}</h1>
           <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">
-            {t('dashboard.freePlanUsage', { current: projects.length, max: maxProjects })}
+            {planTier === 'pro'
+              ? t('dashboard.proPlanUsage', { count: projects.length })
+              : t('dashboard.freePlanUsage', {
+                  current: projects.length,
+                  max: FREE_PLAN_MAX_PROJECTS
+                })}
           </p>
         </div>
         <button 

@@ -70,6 +70,7 @@ export const messages = {
     dashboard: {
       title: 'Dashboard',
       freePlanUsage: 'Free Plan · {current}/{max} Projects Used',
+      proPlanUsage: 'Pro Plan · {count} projects (unlimited)',
       newProject: 'New Project',
       aiBannerTitle: 'Generate Project with AI',
       aiBannerBody:
@@ -298,6 +299,7 @@ export const messages = {
     dashboard: {
       title: '工作台',
       freePlanUsage: '免费版 · 已用 {current}/{max} 个项目',
+      proPlanUsage: '专业版 · 当前 {count} 个项目（无上限）',
       newProject: '新建项目',
       aiBannerTitle: '用 AI 生成项目',
       aiBannerBody: '描述你的想法，获得完整路线图。AI 生成的计划会自动保存。',
